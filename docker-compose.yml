@@ -1,0 +1,15 @@
+version: '2'
+services:
+  sheety-builder:
+    image: node:8.9.4-alpine
+    working_dir: "/app"
+    ports:
+     - "3000:3000"
+    environment:
+     - "YARN_CACHE_FOLDER=/yarn-cache"
+     - "CHOKIDAR_USEPOLLING=true"
+    volumes:
+     - ".:/app"
+     - "./.yarn-cache:/yarn-cache"
+    command: "npm run start"
+    network_mode: "bridge"
