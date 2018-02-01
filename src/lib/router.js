@@ -1,32 +1,24 @@
 import React from 'react';
 import { connect } from 'react-redux';
+import { BrowserRouter, Route, Switch } from 'react-router-dom';
 import Auth from './containers/auth';
 import Importer from './containers/importer';
-import { BrowserRouter, Route } from 'react-router-dom';
+import Editor from './containers/editor';
 
 function Router({ isSignedIn }) {
   return (
     <BrowserRouter>
-      {isSignedIn
-        ? renderLogin()
-        : renderImporter()}
+      <Switch>
+        <Route
+          exact
+          path="/"
+          component={isSignedIn ? Auth : Importer} />
+        <Route
+          exact
+          path="/:spreadsheetId"
+          component={Editor} />
+      </Switch>
     </BrowserRouter>
-  );
-}
-
-function renderLogin() {
-  return (
-    <Route
-      path="/"
-      component={Auth} />
-  );
-}
-
-function renderImporter() {
-  return (
-    <Route
-      path="/"
-      component={Importer} />
   );
 }
 

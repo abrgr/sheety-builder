@@ -1,8 +1,6 @@
 import React, { Component } from 'react';
-import { connect } from 'react-redux';
-import { importerActions } from '../action-creators';
 
-class Importer_ extends Component {
+class Importer extends Component {
   constructor() {
     super();
 
@@ -31,12 +29,8 @@ class Importer_ extends Component {
 
   onImport = (evt) => {
     evt.preventDefault();
-    this.props.dispatch(importerActions.importSheet(this.state.sheetId));
+    this.props.history.push(`/${this.state.sheetId}`);
   };
 }
-
-const Importer = connect(
-  ({ importer }) => ({ })
-)(Importer_);
 
 export default Importer;

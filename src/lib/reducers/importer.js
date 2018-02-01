@@ -11,7 +11,7 @@ export default function importer(state = initialState, action) {
   switch ( action.type ) {
     case actions.RECEIVED_SPREADSHEET_ID:
       return state.merge({
-        isLoading: action.isLoading,
+        isLoading: true,
         spreadsheetId: action.spreadsheetId,
         model: null 
       });
