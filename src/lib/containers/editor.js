@@ -22,7 +22,9 @@ class Editor_ extends Component {
     }
 
     return (
-      <textarea defaultValue={JSON.stringify(this.props.model.toJS())} />
+      <pre>
+        {JSON.stringify(this.props.model.toJS())}
+      </pre>
     );
   }
 }

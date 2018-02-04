@@ -7,30 +7,49 @@ export default function sheetToModel(spreadsheet) {
   )).map((sheet) => (
     new Tab({
       id: sheet.properties.title,
-      rows: new List(sheet.data[0].rowData).map(({values}) => (
-        new List(values).map((cellValue) => {
-          const formulaValue = cellValue.userEnteredValue
-                             && cellValue.userEnteredValue.formulaValue;
+      rows: trimNulls(
+        new List(sheet.data[0].rowData).map(({values}) => (
+          trimNulls(
+            new List(values).map((cellValue) => {
+              const formulaValue = !!cellValue.userEnteredValue
+                                 ? cellValue.userEnteredValue.formulaValue
+                                 : null; 
+              const staticValue = !!formulaValue
+                                ? null
+                                : toValue(cellValue.effectiveValue);
 
-          return new Cell({
-            staticValue: !!formulaValue
-                       ? null
-                       : toValue(cellValue.effectiveValue),
-            formula: formulaValue,
-            isUserEditable: false, // TODO
-            link: cellValue.hyperlink,
-            remoteValue: new RemoteRef() // TODO
-            //TODO: handle pivot tables
-            //      https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets#CellData
-          });
-        })
-      ))
+              if ( staticValue === null && formulaValue === null ) {
+                return null;
+              }
+
+              return new Cell({
+                staticValue,
+                formula: formulaValue,
+                isUserEditable: false, // TODO
+                link: cellValue.hyperlink,
+                remoteValue: new RemoteRef() // TODO
+                //TODO: handle pivot tables
+                //      https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets#CellData
+              });
+            })
+          )
+        ))
+      )
     })
   ));
 
   return new Sheet({
     tabs
   });
+}
+
+function trimNulls(lst) {
+  const trimmed = lst.reverse()
+                     .skipWhile(n => n === null)
+                     .reverse();
+  return trimmed.isEmpty()
+        ? null
+        : trimmed;
 }
 
 function toValue(sheetValue) {
