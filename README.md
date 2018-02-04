@@ -5,9 +5,9 @@ Since you're here looking at this code, you're probably thinking: "This sounds g
  - Sheety Model - provides model types used in other modules
  - Sheety Modeler - generates a declarative model from a spreadsheet
  - Sheety Calculator - accepts that model and a current state, runs all modeled calculations, and generates the new state of every cell
- - *Sheety App* - React component that takes the model and, using the Sheety Calculator, renders the app, handling user data updates, authentication, aggregate data retrieval, etc.
+ - Sheety App - React component that takes the model and, using the Sheety Calculator, renders the app, handling user data updates, authentication, aggregate data retrieval, etc.
  - Sheety API - hosted API layer that accepts user data updates and serves results from the Sheety Calculator
- - Sheety Builder - constructs a Sheety Model of a spreadsheet.
+ - *Sheety Builder* - constructs a Sheety Model of a spreadsheet.
 
 So... how do you maintain and extend this thing?  You have options.  From least to most work:
  - Wrap the Sheety App components to change styling, integrate into existing apps, or inject your own functionality.
