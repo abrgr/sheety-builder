@@ -1,5 +1,7 @@
-import { Sheet, Tab, Cell, RemoteRef } from 'sheety-model';
+import { Sheet, Tab, Cell } from 'sheety-model';
 import { List } from 'immutable';
+
+const funcsToIgnore = /IntrinioDataPoint/i;
 
 export default function sheetToModel(spreadsheet) {
   const tabs = List(spreadsheet.sheets).filter((sheet) => (
@@ -14,7 +16,8 @@ export default function sheetToModel(spreadsheet) {
               const formulaValue = !!cellValue.userEnteredValue
                                  ? cellValue.userEnteredValue.formulaValue
                                  : null; 
-              const staticValue = !!formulaValue
+              const isIgnoredFunc = !!funcsToIgnore.exec(formulaValue);
+              const staticValue = !!formulaValue && !isIgnoredFunc
                                 ? null
                                 : toValue(cellValue.effectiveValue);
 
@@ -22,12 +25,18 @@ export default function sheetToModel(spreadsheet) {
                 return null;
               }
 
+              const format = cellValue.effectiveFormat && cellValue.effectiveFormat.numberFormat;
+
               return new Cell({
                 staticValue,
-                formula: formulaValue,
+                formula: !isIgnoredFunc && formulaValue ? formulaValue.replace(/^=/, '') : null,
                 isUserEditable: false, // TODO
                 link: cellValue.hyperlink,
-                remoteValue: new RemoteRef() // TODO
+                remoteValue: null, // TODO
+                format: format ? {
+                  type: format.type,
+                  pattern: format.pattern
+                } : null
                 //TODO: handle pivot tables
                 //      https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets#CellData
               });

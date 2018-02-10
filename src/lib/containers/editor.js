@@ -21,6 +21,14 @@ class Editor_ extends Component {
       );
     }
 
+    if ( this.props.error ) {
+      return (
+        <p>
+          An error occured!
+        </p>
+      );
+    }
+
     return (
       <pre>
         {JSON.stringify(this.props.model.toJS())}
@@ -33,7 +41,8 @@ const Editor = connect(
   ({ importer }) => ({
     isLoading: importer.get('isLoading'),
     spreadsheetId: importer.get('spreadsheetId'),
-    model: importer.get('model')
+    model: importer.get('model'),
+    error: importer.get('error')
   })
 )(Editor_);
 

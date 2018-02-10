@@ -4,7 +4,8 @@ import * as actions from '../actions';
 const initialState = new Record({
   isLoading: false,
   spreadsheetId: null,
-  model: null
+  model: null,
+  error: null
 })();
 
 export default function importer(state = initialState, action) {
@@ -20,6 +21,12 @@ export default function importer(state = initialState, action) {
         isLoading: false,
         model: action.model
       });
+    case actions.RECEIVED_IMPORT_ERROR:
+      return state.merge({
+        isLoading: false,
+        model: null,
+        error: action.err
+      }); 
     default:
       return state;
   }

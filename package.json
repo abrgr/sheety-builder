@@ -19,7 +19,7 @@
     "react-scripts": "1.1.0",
     "redux": "^3.7.2",
     "redux-thunk": "^2.2.0",
-    "sheety-model": "https://github.com/abrgr/sheety-model.git"
+    "sheety-model": "https://github.com/abrgr/sheety-model.git#058e6f9ddab902b93b28ba835eba55363fd5555f"
   },
   "scripts": {
     "start": "react-scripts start",
