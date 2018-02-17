@@ -6,7 +6,9 @@ import 'react-quill/dist/quill.snow.css';
 export default ({ value, onUpdate }) => (
   <div>
     <ReactQuill
-      value={value}
-      onChange={html => onUpdate(html)} />
+      value={value || ''}
+      onChange={html => {
+        onUpdate(html);
+      }} />
   </div>
 );

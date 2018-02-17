@@ -16,7 +16,14 @@ export default ({
 
   return (
     <div>
-      <h1>{presenterDescriptor.get('name')}</h1>
+      <h1>Configuration for {presenterDescriptor.get('name')}</h1>
+      <p>Give this presenter an identifier</p>
+      <input
+        type="text"
+        value={presenter.get('id', '')}
+        onChange={evt => {
+          onUpdatePresenter(presenter.set('id', evt.target.value));
+        }} />
       {presenterDescriptor.get('config').map((desc, name) => (
         <ConfigItem
           key={name}
@@ -38,7 +45,10 @@ export default ({
           onEditPresenter={(path) => {
             onEditPresenter(['mapData', name].concat(path));
           }}
-          value={presenter.getIn([ 'mapData', name ])} />
+          value={presenter.getIn([ 'mapData', name ])}
+          onUpdate={(newValue) => {
+            onUpdatePresenter(presenter.setIn([ 'mapData', name ], newValue));
+          }} />
       )).valueSeq()}
       {arrayData
         ? (
@@ -122,7 +132,6 @@ const RowsConfigurer = ({ value, onUpdate, onEditPresenter }) => (
       }}>
       Add row
     </button>
-    
   </div>
 );
 
@@ -132,7 +141,20 @@ const ContentConfigurer = ({ desc, value, onUpdate }) => (
     onUpdate={onUpdate} />
 );
 
+const FormulaConfigurer = ({ value, onUpdate }) => (
+  <div>
+    <p>Formula:</p>
+    <input
+      type="text"
+      value={value}
+      onChange={evt => {
+        onUpdate(evt.target.value);
+      }} />
+  </div>
+);
+
 const configByType = new Map({
   rows: RowsConfigurer,
-  'wysiwyg-content': ContentConfigurer
+  'wysiwyg-content': ContentConfigurer,
+  formula: FormulaConfigurer
 });
