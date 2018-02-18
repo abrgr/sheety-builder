@@ -12,7 +12,7 @@ function Router({ isSignedIn }) {
         <Route
           exact
           path="/"
-          component={isSignedIn ? Auth : Importer} />
+          component={isSignedIn ? Importer : Auth} />
         <Route
           exact
           path="/:spreadsheetId"

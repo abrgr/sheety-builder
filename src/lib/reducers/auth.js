@@ -9,7 +9,7 @@ const initialState = new Record({
 export default function auth(state = initialState, action) {
   switch ( action.type ) {
     case actions.RECEIVED_AUTH_STATUS:
-      return state.set({
+      return state.merge({
         isLoading: false,
         isSignedIn: action.isSignedIn
       });

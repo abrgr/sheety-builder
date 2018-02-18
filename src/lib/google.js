@@ -1,4 +1,5 @@
 import cfg from '../config';
+import { accessTokenEvents } from './persistence';
 
 let gapi = null;
 const loadedPromise = new Promise((resolve, reject) => {
@@ -30,40 +31,13 @@ function getGapi() {
   return loadedPromise;
 }
 
-let onAuthFns = [];
-let isSignedIn = null;
-export function onAuth(handler) {
-  if ( isSignedIn !== null ) {
-    return handler(isSignedIn);
-  }
-
-  onAuthFns.push(handler);
-}
-
-export function removeOnAuth(handler) {
-  onAuthFns = onAuthFns.filter(f => f === handler);
-}
-
-function fireAuth(_isSignedIn) {
-  isSignedIn = _isSignedIn;
-  onAuthFns.forEach((fn) => fn(isSignedIn));
-}
-
-export function authorize() {
-  return getGapi().then((gapi) => (
-    new Promise((resolve, reject) => {
-      const auth = gapi.auth2.getAuthInstance();
-      onAuth(resolve);
-      auth.isSignedIn.listen(fireAuth);
-
-      if ( auth.isSignedIn.get() ) {
-        fireAuth(true);
-      } else {
-        auth.signIn();
-      }
-    })
-  ));
-}
+accessTokenEvents.on('token', (accessToken) => {
+  return getGapi().then((gapi) => {
+    gapi.auth.setToken({
+      access_token: accessToken
+    });
+  });
+});
 
 export function getSpreadsheet(spreadsheetId) {
   return getGapi().then((gapi) => (
