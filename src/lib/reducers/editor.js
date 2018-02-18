@@ -16,6 +16,7 @@ const ConfigurerDescriptor = new Record({
 });
 
 const initialState = new Record({
+  appId: '',
   availablePresenters: new Map({
     'grid-layout': new PresenterDescriptor({
       type: 'grid-layout',
@@ -61,6 +62,8 @@ export default function editor(state = initialState, action) {
       return state.setIn(['presenter'].concat(action.path), action.presenter);
     case actions.SET_EDITING_PRESENTER_PATH:
       return state.set('editingPresenterPath', action.editingPresenterPath);
+    case actions.SET_APP_ID:
+      return state.set('appId', action.appId);
     default:
       return state;
   }

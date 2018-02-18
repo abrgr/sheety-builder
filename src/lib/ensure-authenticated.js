@@ -34,7 +34,7 @@ export default function ensureAuthenticated(allowAnonymous, signIn) {
     // wait for some change in the authentication state
     process.nextTick(signIn);
 
-    return Promise((resolve) => {
+    return new Promise((resolve) => {
       const unsubscribe = auth.onAuthStateChanged((user) => {
         if ( auth.currentUser && !auth.currentUser.isAnonymous ) {
           unsubscribe();

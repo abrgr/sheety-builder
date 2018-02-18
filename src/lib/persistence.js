@@ -2,11 +2,16 @@ import firebase from './firebase';
 import ensureAuthenticated from './ensure-authenticated';
 import EventEmitter from 'events';
 
-const db = firebase.firestore();
 const auth = firebase.auth();
+const db = firebase.firestore();
+const storage = firebase.storage();
+
+const signIn = () => {
+  window.location = '/';
+};
 
 export function updateUserConfig(cfg) {
-  return ensureAuthenticated(false, () => window.location = '/')
+  return ensureAuthenticated(false, signIn)
     .then(uid => (
       db.collection('user-config')
         .doc(uid)
@@ -18,6 +23,26 @@ export function updateUserConfig(cfg) {
 }
 
 export const accessTokenEvents = listenForAccessTokens();
+
+export function saveApp(appId, spreadsheetId, model, presenter) {
+  return ensureAuthenticated(false, signIn)
+    .then(uid => (
+      storage.ref()
+             .child(`apps/${uid}/${appId}`)
+             .putString(
+               JSON.stringify({
+                 appId,
+                 spreadsheetId,
+                 model: model && model.toJS(),
+                 presenter: presenter && presenter.toJS()
+               }),
+               'raw',
+               {
+                 contentType: 'application/json'
+               }
+             )
+    ));
+}
 
 function listenForAccessTokens() {
   const tokenEmitter = new EventEmitter();

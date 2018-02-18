@@ -15,6 +15,7 @@ class Editor_ extends Component {
 
   render() {
     const {
+      appId,
       isLoading,
       spreadsheetId,
       match,
@@ -45,51 +46,79 @@ class Editor_ extends Component {
 
     return (
       <div>
-        <div style={{float: 'left', width: '70%' }}>
-          Content!
-          <pre>
-            {JSON.stringify(presenter.toJS())}
-          </pre>
+        <div>
+          <p>App ID:</p>
+          <input
+            type="text"
+            value={appId}
+            onChange={this.onUpdateAppId} />
+          <button onClick={this.onSave}>
+            Save!
+          </button>
         </div>
-        <div style={{float: 'left', width: '30%' }}>
-          <Pallette
-            availablePresenters={availablePresenters.valueSeq()}
-            onSelected={(selectedPresenterType) => {
-              dispatch(
-                editorActions.updatePresenterAtPath(
-                  editingPresenterPath,
-                  new Map({
-                    type: selectedPresenterType
-                  })
+        <div style={{clear: 'both'}}>
+          <div style={{float: 'left', width: '70%' }}>
+            Content!
+            <pre>
+              {JSON.stringify(presenter.toJS())}
+            </pre>
+          </div>
+          <div style={{float: 'left', width: '30%' }}>
+            <Pallette
+              availablePresenters={availablePresenters.valueSeq()}
+              onSelected={(selectedPresenterType) => {
+                dispatch(
+                  editorActions.updatePresenterAtPath(
+                    editingPresenterPath,
+                    new Map({
+                      type: selectedPresenterType
+                    })
+                  )
                 )
-              )
-            }} />
-          <Configurator
-            presenterDescriptor={availablePresenters.get(presenter.getIn(editingPresenterPath.concat(['type'])))}
-            presenter={presenter.getIn(editingPresenterPath)}
-            onUpdatePresenter={(newValue) => {
-              dispatch(
-                editorActions.updatePresenterAtPath(
-                  editingPresenterPath,
-                  newValue
+              }} />
+            <Configurator
+              presenterDescriptor={availablePresenters.get(presenter.getIn(editingPresenterPath.concat(['type'])))}
+              presenter={presenter.getIn(editingPresenterPath)}
+              onUpdatePresenter={(newValue) => {
+                dispatch(
+                  editorActions.updatePresenterAtPath(
+                    editingPresenterPath,
+                    newValue
+                  )
                 )
-              )
-            }}
-            onEditPresenter={(newPathPart) => {
-              dispatch(
-                editorActions.setEditingPresenterPath(
-                  editingPresenterPath.concat(newPathPart)
+              }}
+              onEditPresenter={(newPathPart) => {
+                dispatch(
+                  editorActions.setEditingPresenterPath(
+                    editingPresenterPath.concat(newPathPart)
+                  )
                 )
-              )
-            }}/>
+              }}/>
+          </div>
         </div>
       </div>
     );
   }
+
+  onUpdateAppId = (evt) => {
+    this.props.dispatch(editorActions.setAppId(evt.target.value));
+  };
+
+  onSave = () => {
+    const {
+      appId,
+      spreadsheetId,
+      model,
+      presenter,
+      dispatch
+    } = this.props;
+    dispatch(editorActions.save(appId, spreadsheetId, model, presenter));
+  };
 }
 
 const Editor = connect(
   ({ editor, importer }) => ({
+    appId: editor.get('appId'),
     isLoading: importer.get('isLoading'),
     spreadsheetId: importer.get('spreadsheetId'),
     model: importer.get('model'),

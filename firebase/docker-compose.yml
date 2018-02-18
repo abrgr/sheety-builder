@@ -1,0 +1,14 @@
+version: '2'
+services:
+  firebase-cli:
+    image: firebase-cli
+    build:
+      context: .
+    working_dir: "/app"
+    ports:
+     - "3000:3000"
+    volumes:
+     - ".:/app"
+     - ".config:/root/.config"
+    command: "firebase"
+    network_mode: "bridge"
