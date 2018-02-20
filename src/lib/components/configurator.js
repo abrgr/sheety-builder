@@ -146,7 +146,7 @@ const FormulaConfigurer = ({ value, onUpdate }) => (
     <p>Formula:</p>
     <input
       type="text"
-      value={value}
+      value={value || ''}
       onChange={evt => {
         onUpdate(evt.target.value);
       }} />

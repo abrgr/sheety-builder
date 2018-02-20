@@ -4,6 +4,7 @@ import { connect } from 'react-redux';
 import { importerActions, editorActions } from '../action-creators';
 import Pallette from '../components/pallette';
 import Configurator from '../components/configurator';
+import Preview from '../components/preview';
 
 class Editor_ extends Component {
   componentDidMount() {
@@ -20,6 +21,7 @@ class Editor_ extends Component {
       spreadsheetId,
       match,
       error,
+      calc,
       presenter,
       availablePresenters,
       editingPresenterPath,
@@ -59,9 +61,9 @@ class Editor_ extends Component {
         <div style={{clear: 'both'}}>
           <div style={{float: 'left', width: '70%' }}>
             Content!
-            <pre>
-              {JSON.stringify(presenter.toJS())}
-            </pre>
+            <Preview
+              calc={calc}
+              presenter={presenter} />
           </div>
           <div style={{float: 'left', width: '30%' }}>
             <Pallette
@@ -123,6 +125,7 @@ const Editor = connect(
     spreadsheetId: importer.get('spreadsheetId'),
     model: importer.get('model'),
     error: importer.get('error'),
+    calc: importer.get('calc'),
     availablePresenters: editor.get('availablePresenters'),
     presenter: editor.get('presenter'),
     editingPresenterPath: editor.get('editingPresenterPath')

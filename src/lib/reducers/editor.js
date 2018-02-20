@@ -45,7 +45,7 @@ const initialState = new Record({
       name: 'Content',
       icon: 'favicon.ico',
       config: new Map({
-        text: new ConfigurerDescriptor({
+        content: new ConfigurerDescriptor({
           type: 'wysiwyg-content',
           description: 'Content to show'
         })
