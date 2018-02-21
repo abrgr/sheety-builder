@@ -1,6 +1,10 @@
 import React, { Component } from 'react';
 import { Map } from 'immutable';
 import { connect } from 'react-redux';
+import FlatButton from 'material-ui/FlatButton';
+import TextField from 'material-ui/TextField';
+import AppBar from 'material-ui/AppBar';
+import { orange500 } from 'material-ui/styles/colors';
 import { importerActions, editorActions } from '../action-creators';
 import Pallette from '../components/pallette';
 import Configurator from '../components/configurator';
@@ -48,19 +52,24 @@ class Editor_ extends Component {
 
     return (
       <div>
-        <div>
-          <p>App ID:</p>
-          <input
-            type="text"
-            value={appId}
-            onChange={this.onUpdateAppId} />
-          <button onClick={this.onSave}>
-            Save!
-          </button>
-        </div>
+        <AppBar
+          showMenuIconButton={false}
+          title={(
+            <TextField
+              floatingLabelText="App ID"
+              floatingLabelStyle={{ color: orange500 }}
+              floatingLabelFocusStyle={{ color: orange500 }}
+              inputStyle={{ color: orange500 }}
+              value={appId}
+              onChange={this.onUpdateAppId} />
+          )}
+          iconElementRight={(
+            <FlatButton
+              label="Save"
+              onClick={this.onSave} />
+          )} />
         <div style={{clear: 'both'}}>
           <div style={{float: 'left', width: '70%' }}>
-            Content!
             <Preview
               calc={calc}
               presenter={presenter}

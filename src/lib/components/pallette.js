@@ -1,16 +1,19 @@
 import React from 'react';
+import {List, ListItem} from 'material-ui/List';
+import Subheader from 'material-ui/Subheader';
+import Paper from 'material-ui/Paper';
 
 export default ({ onSelected, availablePresenters }) => (
-  <div>
-    <p>Available Components</p>
-    <ul>
+  <Paper
+    zDepth={1}>
+    <List>
+      <Subheader>Core Components</Subheader>
       {availablePresenters.map(presenter => (
-        <li key={presenter.get('type')}>
-          <button onClick={onSelected.bind(null, presenter.get('type'))}>
-            {presenter.get('name')}
-          </button>
-        </li>
+        <ListItem
+          key={presenter.get('type')}
+          primaryText={presenter.get('name')}
+          onClick={onSelected.bind(null, presenter.get('type'))} />
       ))}
-    </ul>
-  </div>
+    </List>
+  </Paper>
 );

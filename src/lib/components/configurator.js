@@ -1,5 +1,7 @@
 import React from 'react';
 import { Map, List } from 'immutable';
+import {Card, CardHeader, CardText} from 'material-ui/Card';
+import TextField from 'material-ui/TextField';
 import WysiwygEditor from './wysiwyg-editor';
 
 export default ({
@@ -15,52 +17,54 @@ export default ({
   const arrayData = presenterDescriptor.get('arrayData');
 
   return (
-    <div>
-      <h1>Configuration for {presenterDescriptor.get('name')}</h1>
-      <p>Give this presenter an identifier</p>
-      <input
-        type="text"
-        value={presenter.get('id', '')}
-        onChange={evt => {
-          onUpdatePresenter(presenter.set('id', evt.target.value));
-        }} />
-      {presenterDescriptor.get('config').map((desc, name) => (
-        <ConfigItem
-          key={name}
-          name={name}
-          desc={desc}
-          onEditPresenter={(path) => {
-            onEditPresenter(['config', name].concat(path));
-          }}
-          value={presenter.getIn([ 'config', name ])}
-          onUpdate={(newValue) => {
-            onUpdatePresenter(presenter.setIn([ 'config', name ], newValue));
-          }}/>
-      )).valueSeq()}
-      {presenterDescriptor.get('mapDataQuery').map((desc, name) => (
-        <ConfigItem
-          key={name}
-          name={name}
-          desc={desc}
-          onEditPresenter={(path) => {
-            onEditPresenter(['mapDataQuery', name].concat(path));
-          }}
-          value={presenter.getIn([ 'mapDataQuery', name ])}
-          onUpdate={(newValue) => {
-            onUpdatePresenter(presenter.setIn([ 'mapDataQuery', name ], newValue));
+    <Card>
+      <CardHeader
+        title={`Configuration for ${presenterDescriptor.get('name')}`} />
+      <CardText>
+        <TextField
+          floatingLabelText="Presenter ID"
+          value={presenter.get('id', '')}
+          onChange={evt => {
+            onUpdatePresenter(presenter.set('id', evt.target.value));
           }} />
-      )).valueSeq()}
-      {arrayData
-        ? (
+        {presenterDescriptor.get('config').map((desc, name) => (
           <ConfigItem
-            name='arrayData'
-            desc={null}
+            key={name}
+            name={name}
+            desc={desc}
             onEditPresenter={(path) => {
-              onEditPresenter(['arrayData'].concat(path));
+              onEditPresenter(['config', name].concat(path));
             }}
-            value={presenter.get('arrayData')} />
-        ) : null}
-    </div>
+            value={presenter.getIn([ 'config', name ])}
+            onUpdate={(newValue) => {
+              onUpdatePresenter(presenter.setIn([ 'config', name ], newValue));
+            }}/>
+        )).valueSeq()}
+        {presenterDescriptor.get('mapDataQuery').map((desc, name) => (
+          <ConfigItem
+            key={name}
+            name={name}
+            desc={desc}
+            onEditPresenter={(path) => {
+              onEditPresenter(['mapDataQuery', name].concat(path));
+            }}
+            value={presenter.getIn([ 'mapDataQuery', name ])}
+            onUpdate={(newValue) => {
+              onUpdatePresenter(presenter.setIn([ 'mapDataQuery', name ], newValue));
+            }} />
+        )).valueSeq()}
+        {arrayData
+          ? (
+            <ConfigItem
+              name='arrayData'
+              desc={null}
+              onEditPresenter={(path) => {
+                onEditPresenter(['arrayData'].concat(path));
+              }}
+              value={presenter.get('arrayData')} />
+          ) : null}
+      </CardText>
+    </Card>
   );
 };
 
@@ -143,9 +147,8 @@ const ContentConfigurer = ({ desc, value, onUpdate }) => (
 
 const FormulaConfigurer = ({ value, onUpdate }) => (
   <div>
-    <p>Formula:</p>
-    <input
-      type="text"
+    <TextField
+      floatingLabelText="Formula"
       value={value || ''}
       onChange={evt => {
         onUpdate(evt.target.value);

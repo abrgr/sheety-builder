@@ -1,5 +1,7 @@
 import React, { cloneElement, Children } from 'react';
 import { Map } from 'immutable';
+import Paper from 'material-ui/Paper';
+import { grey200 } from 'material-ui/styles/colors';
 import makeCorePresenters from 'sheety-core-presenters/dist/builder';
 
 // TODO: figure out some way to share this code with sheety-app's presenter
@@ -72,6 +74,18 @@ makeCorePresenters(
   }
 );
 
+const Placeholder = () => (
+  <Paper
+    zDepth={1}
+    style={{ backgroundColor: grey200 }}>
+    Add a presenter
+  </Paper>
+);
+
 export default ({ presenter, calc, onSelectPresenterForEditing }) => (
-  renderPresenter(calc, onSelectPresenterForEditing, [], presenter)
+  presenter && presenterComponents[presenter.get('type')]
+    ? renderPresenter(calc, onSelectPresenterForEditing, [], presenter)
+    : (
+      <Placeholder />
+    )
 );
