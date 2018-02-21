@@ -6470,9 +6470,9 @@ shebang-regex@^1.0.0:
     sheety-model "https://github.com/abrgr/sheety-model.git#9e39d24179704040476f05c8438d5ade50679aca"
     toposort "^1.0.6"
 
-"sheety-core-presenters@https://github.com/abrgr/sheety-core-presenters.git#940daae4b803ed817acfa2695f6d77c4158d7a3b":
+"sheety-core-presenters@https://github.com/abrgr/sheety-core-presenters.git#6220f5d2d65a336b1b67fa0453687c22a35f2d41":
   version "0.1.0"
-  resolved "https://github.com/abrgr/sheety-core-presenters.git#940daae4b803ed817acfa2695f6d77c4158d7a3b"
+  resolved "https://github.com/abrgr/sheety-core-presenters.git#6220f5d2d65a336b1b67fa0453687c22a35f2d41"
   dependencies:
     firebaseui "^2.6.1"
     immutable "^3.8.2"

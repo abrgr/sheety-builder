@@ -63,7 +63,8 @@ class Editor_ extends Component {
             Content!
             <Preview
               calc={calc}
-              presenter={presenter} />
+              presenter={presenter}
+              onSelectPresenterForEditing={this.onSelectPresenterForEditing} />
           </div>
           <div style={{float: 'left', width: '30%' }}>
             <Pallette
@@ -101,6 +102,11 @@ class Editor_ extends Component {
       </div>
     );
   }
+
+  onSelectPresenterForEditing = (path) => {
+    const { dispatch } = this.props;
+    dispatch(editorActions.setEditingPresenterPath(path));
+  };
 
   onUpdateAppId = (evt) => {
     this.props.dispatch(editorActions.setAppId(evt.target.value));

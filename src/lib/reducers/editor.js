@@ -6,7 +6,7 @@ const PresenterDescriptor = new Record({
   name: null,
   icon: null,
   config: new Map(),
-  mapData: new Map(),
+  mapDataQuery: new Map(),
   arrayData: null
 });
 
@@ -33,7 +33,7 @@ const initialState = new Record({
       type: 'text',
       name: 'Text',
       icon: 'favicon.ico',
-      mapData: new Map({
+      mapDataQuery: new Map({
         text: new ConfigurerDescriptor({
           type: 'formula',
           description: 'A formula for the text to show'

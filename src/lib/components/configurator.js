@@ -37,17 +37,17 @@ export default ({
             onUpdatePresenter(presenter.setIn([ 'config', name ], newValue));
           }}/>
       )).valueSeq()}
-      {presenterDescriptor.get('mapData').map((desc, name) => (
+      {presenterDescriptor.get('mapDataQuery').map((desc, name) => (
         <ConfigItem
           key={name}
           name={name}
           desc={desc}
           onEditPresenter={(path) => {
-            onEditPresenter(['mapData', name].concat(path));
+            onEditPresenter(['mapDataQuery', name].concat(path));
           }}
-          value={presenter.getIn([ 'mapData', name ])}
+          value={presenter.getIn([ 'mapDataQuery', name ])}
           onUpdate={(newValue) => {
-            onUpdatePresenter(presenter.setIn([ 'mapData', name ], newValue));
+            onUpdatePresenter(presenter.setIn([ 'mapDataQuery', name ], newValue));
           }} />
       )).valueSeq()}
       {arrayData

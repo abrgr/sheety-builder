@@ -1,6 +1,6 @@
 import React, { cloneElement, Children } from 'react';
 import { Map } from 'immutable';
-import makeCorePresenters from 'sheety-core-presenters/dist/app';
+import makeCorePresenters from 'sheety-core-presenters/dist/builder';
 
 // TODO: figure out some way to share this code with sheety-app's presenter
 
@@ -20,7 +20,11 @@ function presenter({ formatted, configKeyDocs, mapDataDocs, arrayDataDocs }) {
 }
 
 const PresenterContainer = (props) => (
-  <div onClick={() => console.log('clicked')}>
+  <div
+    onClick={(evt) => {
+      evt.stopPropagation();
+      props.onSelectPresenterForEditing(props.path);
+    }}>
     {cloneElement(
       Children.only(props.children),
       {
@@ -32,23 +36,29 @@ const PresenterContainer = (props) => (
         mapDataQuery: props.mapDataQuery,
         sheet: props.sheet,
         setCellValues: (values) => { console.log(values); },
-        renderPresenter: renderPresenter.bind(null, props.calc, props.idChain)
+        path: props.path,
+        onSelectPresenterForEditing: props.onSelectPresenterForEditing,
+        renderPresenter: renderPresenter.bind(null, props.calc, props.onSelectPresenterForEditing)
       }
     )}
   </div>
 );
 
-function renderPresenter(calc, idChain = [], presenter) {
+function renderPresenter(calc, onSelectPresenterForEditing, path=[], presenter) {
   if ( !presenter || presenter.isEmpty() ) {
     return null;
   }
 
   const Presenter = presenterComponents[presenter.get('type')];
+
   return (
     <Presenter
       calc={calc}
-      idChain={idChain.concat([presenter.get('id')])}
-      config={presenter.get('config', new Map())} />
+      path={path}
+      config={presenter.get('config', new Map())}
+      mapDataQuery={presenter.get('mapDataQuery')}
+      arrayDataQuery={presenter.get('arrayDataQuery')}
+      onSelectPresenterForEditing={onSelectPresenterForEditing} />
   );
 }
 
@@ -62,6 +72,6 @@ makeCorePresenters(
   }
 );
 
-export default ({ presenter, calc }) => (
-  renderPresenter(calc, [], presenter)
+export default ({ presenter, calc, onSelectPresenterForEditing }) => (
+  renderPresenter(calc, onSelectPresenterForEditing, [], presenter)
 );

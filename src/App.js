@@ -4,7 +4,9 @@ import { createStore, applyMiddleware } from 'redux';
 import thunk from 'redux-thunk';
 import Router from './lib/router';
 import reducers from './lib/reducers';
-import './App.css';
+
+import 'bootstrap/dist/css/bootstrap-grid.css';
+import 'firebaseui/dist/firebaseui.css';
 
 class App extends Component {
   render() {

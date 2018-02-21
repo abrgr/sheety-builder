@@ -7,6 +7,8 @@ import { getSpreadsheet } from '../google';
 import sheetToModel from '../sheet-to-model';
 import firebase from '../firebase';
 
+import { Sheet } from 'sheety-model';
+
 export function importSheet(spreadsheetId) {
   return (dispatch) => {
     dispatch({
