@@ -4,7 +4,8 @@ import {
   SET_APP_ID,
   APP_SAVING_INITIATED,
   APP_SAVING_COMPLETED,
-  APP_SAVING_FAILED
+  APP_SAVING_FAILED,
+  SET_PRESENTERS_BY_TYPE
 } from '../actions';
 import { saveApp } from '../persistence';
 
@@ -47,5 +48,12 @@ export function save(appId, spreadsheetId, model, presenter) {
           error
         });
       });
+  };
+}
+
+export function setPresentersByType(presentersByType) {
+  return {
+    type: SET_PRESENTERS_BY_TYPE,
+    presentersByType
   };
 }

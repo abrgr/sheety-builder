@@ -1,96 +1,246 @@
 import React from 'react';
 import { Map, List } from 'immutable';
-import {Card, CardHeader, CardText} from 'material-ui/Card';
+import { Card, CardHeader, CardText } from 'material-ui/Card';
 import TextField from 'material-ui/TextField';
-import WysiwygEditor from './wysiwyg-editor';
+import Toggle from 'material-ui/Toggle';
+import { List as MList, ListItem } from 'material-ui/List';
+import AddIcon from 'material-ui/svg-icons/content/add';
+import FloatingActionButton from 'material-ui/FloatingActionButton';
+import Slider from 'material-ui/Slider';
+import configurersAndSchemasBySchemaURI from 'sheety-core-presenters/dist/configurer';
+
+import 'react-quill/dist/quill.snow.css';
 
 export default ({
-  presenterDescriptor,
+  presenterComponent,
   presenter,
-  onUpdatePresenter,
+  onUpdate,
   onEditPresenter
 }) => {
-  if ( !presenterDescriptor ) {
+  if ( !presenterComponent ) {
+    // TODO: render presenter schema
     return null;
   }
 
-  const arrayData = presenterDescriptor.get('arrayData');
+  const schema = presenterComponent.schema.toJS();
+  const { title, description, properties } = schema;
 
   return (
     <Card>
       <CardHeader
-        title={`Configuration for ${presenterDescriptor.get('name')}`} />
+        title={title}
+        subtitle={description} />
       <CardText>
-        <TextField
-          floatingLabelText="Presenter ID"
-          value={presenter.get('id', '')}
-          onChange={evt => {
-            onUpdatePresenter(presenter.set('id', evt.target.value));
-          }} />
-        {presenterDescriptor.get('config').map((desc, name) => (
-          <ConfigItem
-            key={name}
-            name={name}
-            desc={desc}
-            onEditPresenter={(path) => {
-              onEditPresenter(['config', name].concat(path));
-            }}
-            value={presenter.getIn([ 'config', name ])}
-            onUpdate={(newValue) => {
-              onUpdatePresenter(presenter.setIn([ 'config', name ], newValue));
-            }}/>
-        )).valueSeq()}
-        {presenterDescriptor.get('mapDataQuery').map((desc, name) => (
-          <ConfigItem
-            key={name}
-            name={name}
-            desc={desc}
-            onEditPresenter={(path) => {
-              onEditPresenter(['mapDataQuery', name].concat(path));
-            }}
-            value={presenter.getIn([ 'mapDataQuery', name ])}
-            onUpdate={(newValue) => {
-              onUpdatePresenter(presenter.setIn([ 'mapDataQuery', name ], newValue));
-            }} />
-        )).valueSeq()}
-        {arrayData
-          ? (
-            <ConfigItem
-              name='arrayData'
-              desc={null}
-              onEditPresenter={(path) => {
-                onEditPresenter(['arrayData'].concat(path));
-              }}
-              value={presenter.get('arrayData')} />
-          ) : null}
+        {Object.keys(properties || {}).map(prop => (
+          <FormPart
+            key={prop}
+            schema={properties[prop]}
+            path={[prop]}
+            onEditPresenter={onEditPresenter}
+            onUpdate={onUpdate}
+            presenter={presenter || new Map()} />
+        ))}
       </CardText>
     </Card>
   );
 };
 
-const ConfigItem = ({
-  name,
-  desc,
-  value,
-  onUpdate,
-  onEditPresenter
-}) => {
-  const Configurer = configByType.get(desc.get('type'));
+const FormPart = ({ schema, path, presenter, onEditPresenter, onUpdate }) => {
+  const { type, $ref } = schema;
 
-  if ( !Configurer ) {
-    return (
-      <p>Bad configurer: {desc.get('type')}</p>
-    );
+  if ( $ref ) {
+    const Configurer = configurersAndSchemasBySchemaURI.getIn([$ref, 'configurer']);
+    return Configurer
+      ? (
+        <Configurer
+          schema={configurersAndSchemasBySchemaURI.getIn([$ref, 'schema'])}
+          path={path}
+          value={presenter.getIn(path, '')}
+          presenter={presenter}
+          onEditPresenter={onEditPresenter}
+          onUpdate={(value) => {
+            onUpdate(path, value);
+          }}/>
+      ) : (
+        <p>
+          Oops, we have no configurer for a {$ref}.
+        </p>
+      );
   }
 
+  if ( schema.hasOwnProperty('const') ) {
+    // const means that there's nothing to configure
+    return null;
+  }
+
+  switch ( type ) {
+    case 'object':
+      return (
+        <ObjectFormPart
+          schema={schema}
+          path={path}
+          presenter={presenter}
+          onEditPresenter={onEditPresenter}
+          onUpdate={onUpdate} />
+      );
+    case 'array':
+      return (
+        <ArrayFormPart
+          schema={schema}
+          path={path}
+          presenter={presenter}
+          onEditPresenter={onEditPresenter}
+          onUpdate={onUpdate} />
+      );
+    default:
+      return (
+        <FieldFormPart
+          schema={schema}
+          path={path}
+          presenter={presenter}
+          onEditPresenter={onEditPresenter}
+          onUpdate={onUpdate} />
+      );
+  }
+};
+
+const ObjectFormPart = ({ schema, path, presenter, onEditPresenter, onUpdate }) => {
+  const { title, description, properties } = schema;
   return (
     <div>
-      <h3>{name}</h3>
-      <Configurer
-        desc={desc}
-        value={value}
-        onEditPresenter={onEditPresenter}
-        onUpdate={onUpdate} />
+      <h2>{title}</h2>
+      <h3>{description}</h3>
+      {Object.keys(properties || {}).map(prop => (
+        <FormPart
+          key={prop}
+          schema={properties[prop]}
+          path={path.concat([prop])}
+          presenter={presenter}
+          onEditPresenter={onEditPresenter}
+          onUpdate={onUpdate} />
+      ))}
+    </div>
+  );
+};
+
+const ArrayFormPart = ({ schema, path, presenter, onEditPresenter, onUpdate }) => {
+  const { title, description, items } = schema;
+  const presenterItems = presenter.getIn(path, new List());
+  return (
+    <div>
+      <h2>{title}</h2>
+      <h3>{description}</h3>
+      <MList>
+        {presenterItems.map((item, idx) => (
+          <div key={`item-${idx}`}>
+            <ListItem
+              primaryText={`Item ${idx + 1}`}>
+              <FormPart
+                  key={`item-${idx}`}
+                  schema={items}
+                  path={path.concat([idx])}
+                  onEditPresenter={onEditPresenter}
+                  onUpdate={onUpdate}
+                  presenter={presenter} />
+            </ListItem>
+          </div>
+        ))}
+        <FloatingActionButton
+          onClick={() => {
+            const defaultVal = {
+              object: new Map(),
+              array: new List(),
+              string: ''
+            }[items.type];
+            onUpdate(path, presenterItems.push(defaultVal));
+          }}>
+          <AddIcon />
+        </FloatingActionButton>
+      </MList>
+    </div>
+  );
+};
+
+const FieldFormPart = ({ schema, path, presenter, onEditPresenter, onUpdate }) => {
+  const { type } = schema;
+  switch ( type ) {
+    case 'string':
+      return (
+        <StringFormPart
+          schema={schema}
+          path={path}
+          presenter={presenter}
+          onEditPresenter={onEditPresenter}
+          onUpdate={onUpdate} />
+      );
+    case 'boolean':
+      return (
+        <BooleanFormPart
+          schema={schema}
+          path={path}
+          presenter={presenter}
+          onEditPresenter={onEditPresenter}
+          onUpdate={onUpdate} />
+      );
+    case 'integer':
+      return (
+        <IntegerFormPart
+          schema={schema}
+          path={path}
+          presenter={presenter}
+          onEditPresenter={onEditPresenter}
+          onUpdate={onUpdate} />
+      );
+    default:
+      return (
+        <p>
+          Oops.  We have no configurer for a {type}.
+        </p>
+      );
+  }
+};
+
+const StringFormPart = ({ schema, path, presenter, onUpdate }) => {
+  const { title, description } = schema;
+  return (
+    <TextField
+      floatingLabelText={title}
+      hintText={description}
+      value={presenter.getIn(path, '')}
+      onChange={(evt) => {
+        onUpdate(path, evt.target.value);
+      }}/>
+  );
+};
+
+const BooleanFormPart = ({ schema, path, presenter, onUpdate }) => {
+  const { title, description } = schema;
+  return (
+    <div>
+      <Toggle
+        label={title}
+        toggled={presenter.getIn(path, '')}
+        onToggle={(_, isChecked) => {
+          onUpdate(path, isChecked);
+        }}/>
+      <p>{description}</p>
+    </div>
+  );
+};
+
+const IntegerFormPart = ({ schema, path, presenter, onUpdate }) => {
+  const { title, description } = schema;
+  return (
+    <div>
+      <Slider
+        min={schema.minimum || 0}
+        max={schema.maximum || 1000}
+        step={1}
+        value={presenter.getIn(path)}
+        onChange={(_, newVal) => {
+          onUpdate(path, newVal);
+        }} />
+      <p>{description}</p>
     </div>
   );
 };
@@ -138,26 +288,3 @@ const RowsConfigurer = ({ value, onUpdate, onEditPresenter }) => (
     </button>
   </div>
 );
-
-const ContentConfigurer = ({ desc, value, onUpdate }) => (
-  <WysiwygEditor
-    value={value}
-    onUpdate={onUpdate} />
-);
-
-const FormulaConfigurer = ({ value, onUpdate }) => (
-  <div>
-    <TextField
-      floatingLabelText="Formula"
-      value={value || ''}
-      onChange={evt => {
-        onUpdate(evt.target.value);
-      }} />
-  </div>
-);
-
-const configByType = new Map({
-  rows: RowsConfigurer,
-  'wysiwyg-content': ContentConfigurer,
-  formula: FormulaConfigurer
-});

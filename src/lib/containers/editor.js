@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Map } from 'immutable';
+import { Map, List } from 'immutable';
 import { connect } from 'react-redux';
 import FlatButton from 'material-ui/FlatButton';
 import TextField from 'material-ui/TextField';
@@ -9,6 +9,8 @@ import { importerActions, editorActions } from '../action-creators';
 import Pallette from '../components/pallette';
 import Configurator from '../components/configurator';
 import Preview from '../components/preview';
+import Breadcrumbs from '../components/breadcrumbs';
+import loadPresenters from '../presenter-registry';
 
 class Editor_ extends Component {
   componentDidMount() {
@@ -16,6 +18,8 @@ class Editor_ extends Component {
     if ( this.props.spreadsheetId !== urlSpreadsheetId ) {
       this.props.dispatch(importerActions.importSheet(urlSpreadsheetId));
     }
+
+    this.props.dispatch(editorActions.setPresentersByType(loadPresenters()));
   }
 
   render() {
@@ -27,7 +31,7 @@ class Editor_ extends Component {
       error,
       calc,
       presenter,
-      availablePresenters,
+      presentersByType,
       editingPresenterPath,
       dispatch
     } = this.props;
@@ -71,30 +75,40 @@ class Editor_ extends Component {
         <div style={{clear: 'both'}}>
           <div style={{float: 'left', width: '70%' }}>
             <Preview
+              presentersByType={presentersByType}
               calc={calc}
               presenter={presenter}
               onSelectPresenterForEditing={this.onSelectPresenterForEditing} />
           </div>
           <div style={{float: 'left', width: '30%' }}>
+            <Breadcrumbs
+              items={new List(editingPresenterPath)}
+              maxItems={3}
+              filterFn={path => (
+                !!presenter.getIn(path.concat('type'))
+              )}
+              nameFn={path => (
+                presenter.getIn(path.concat('id'))
+                  || presentersByType.get(presenter.getIn(path.concat('type'))).schema.get('title')
+              )}
+              onSelectPath={this.onSelectPresenterForEditing} />
             <Pallette
-              availablePresenters={availablePresenters.valueSeq()}
+              presentersByType={presentersByType}
               onSelected={(selectedPresenterType) => {
                 dispatch(
                   editorActions.updatePresenterAtPath(
                     editingPresenterPath,
-                    new Map({
-                      type: selectedPresenterType
-                    })
+                    new Map(presentersByType.get(selectedPresenterType).defaultPresenter())
                   )
                 )
               }} />
             <Configurator
-              presenterDescriptor={availablePresenters.get(presenter.getIn(editingPresenterPath.concat(['type'])))}
+              presenterComponent={presentersByType.get(presenter.getIn(editingPresenterPath.concat(['type'])))}
               presenter={presenter.getIn(editingPresenterPath)}
-              onUpdatePresenter={(newValue) => {
+              onUpdate={(path, newValue) => {
                 dispatch(
                   editorActions.updatePresenterAtPath(
-                    editingPresenterPath,
+                    editingPresenterPath.concat(path),
                     newValue
                   )
                 )
@@ -141,7 +155,7 @@ const Editor = connect(
     model: importer.get('model'),
     error: importer.get('error'),
     calc: importer.get('calc'),
-    availablePresenters: editor.get('availablePresenters'),
+    presentersByType: editor.get('presentersByType'),
     presenter: editor.get('presenter'),
     editingPresenterPath: editor.get('editingPresenterPath')
   })

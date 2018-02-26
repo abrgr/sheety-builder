@@ -53,7 +53,8 @@ const initialState = new Record({
     })
   }),
   presenter: new Map(),
-  editingPresenterPath: []
+  editingPresenterPath: [],
+  presentersByType: new Map()
 })();
 
 export default function editor(state = initialState, action) {
@@ -64,6 +65,8 @@ export default function editor(state = initialState, action) {
       return state.set('editingPresenterPath', action.editingPresenterPath);
     case actions.SET_APP_ID:
       return state.set('appId', action.appId);
+    case actions.SET_PRESENTERS_BY_TYPE:
+      return state.set('presentersByType', action.presentersByType);
     default:
       return state;
   }
