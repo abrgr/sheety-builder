@@ -11,10 +11,16 @@ const Placeholder = () => (
   </Paper>
 );
 
-export default ({ presentersByType, presenter, calc, onSelectPresenterForEditing }) => {
+export default ({
+  presentersByType,
+  presenter,
+  calc,
+  selectedPath,
+  onSelectPresenterForEditing
+}) => {
   const Presenter = presenter && presentersByType.get(presenter.get('type'));
   return !!Presenter
-    ? renderPresenter(presentersByType, calc, onSelectPresenterForEditing, [], presenter)
+    ? renderPresenter(presentersByType, calc, selectedPath, onSelectPresenterForEditing, [], [], presenter)
     : (
       <Placeholder />
     )

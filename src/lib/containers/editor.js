@@ -78,6 +78,7 @@ class Editor_ extends Component {
               presentersByType={presentersByType}
               calc={calc}
               presenter={presenter}
+              selectedPath={editingPresenterPath}
               onSelectPresenterForEditing={this.onSelectPresenterForEditing} />
           </div>
           <div style={{float: 'left', width: '30%' }}>
