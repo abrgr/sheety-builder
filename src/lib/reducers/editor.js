@@ -1,4 +1,5 @@
 import { Record, Map } from 'immutable';
+import Calculator from 'sheety-calculator';
 import * as actions from '../actions';
 
 const PresenterDescriptor = new Record({
@@ -54,7 +55,13 @@ const initialState = new Record({
   }),
   presenter: new Map(),
   editingPresenterPath: [],
-  presentersByType: new Map()
+  presentersByType: new Map(),
+  isMainMenuOpen: false,
+  isLoading: false,
+  spreadsheetId: null,
+  model: null,
+  error: null,
+  calc: null
 })();
 
 export default function editor(state = initialState, action) {
@@ -67,6 +74,26 @@ export default function editor(state = initialState, action) {
       return state.set('appId', action.appId);
     case actions.SET_PRESENTERS_BY_TYPE:
       return state.set('presentersByType', action.presentersByType);
+    case actions.TOGGLE_MAIN_EDITOR_MENU:
+      return state.set('isMainMenuOpen', !state.get('isMainMenuOpen'));
+    case actions.RECEIVED_SPREADSHEET_ID:
+      return state.merge({
+        isLoading: true,
+        spreadsheetId: action.spreadsheetId,
+        model: null 
+      });
+    case actions.RECEIVED_MODEL:
+      return state.merge({
+        isLoading: false,
+        model: action.model,
+        calc: new Calculator(action.model)
+      });
+    case actions.RECEIVED_IMPORT_ERROR:
+      return state.merge({
+        isLoading: false,
+        model: null,
+        error: action.err
+      }); 
     default:
       return state;
   }

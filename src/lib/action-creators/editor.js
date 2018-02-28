@@ -5,9 +5,16 @@ import {
   APP_SAVING_INITIATED,
   APP_SAVING_COMPLETED,
   APP_SAVING_FAILED,
-  SET_PRESENTERS_BY_TYPE
+  SET_PRESENTERS_BY_TYPE,
+  TOGGLE_MAIN_EDITOR_MENU,
+  RECEIVED_SPREADSHEET_ID,
+  RECEIVED_MODEL,
+  RECEIVED_IMPORT_ERROR
 } from '../actions';
 import { saveApp } from '../persistence';
+import { getSpreadsheet } from '../google';
+import sheetToModel from '../sheet-to-model';
+import firebase from '../firebase';
 
 export function setEditingPresenterPath(editingPresenterPath) {
   return {
@@ -55,5 +62,37 @@ export function setPresentersByType(presentersByType) {
   return {
     type: SET_PRESENTERS_BY_TYPE,
     presentersByType
+  };
+}
+
+export function toggleMainMenu() {
+  return {
+    type: TOGGLE_MAIN_EDITOR_MENU
+  };
+}
+
+export function importSheet(spreadsheetId) {
+  return (dispatch) => {
+    dispatch({
+      type: RECEIVED_SPREADSHEET_ID,
+      spreadsheetId
+    });
+
+    getSpreadsheet(spreadsheetId).then(sheetToModel).then((model) => {
+      dispatch({
+        type: RECEIVED_MODEL,
+        model
+      });
+    }).catch((err) => {
+      if ( err.status === 401 ) {
+        firebase.auth().signOut();
+        window.location = '/';
+      }
+
+      dispatch({
+        type: RECEIVED_IMPORT_ERROR,
+        err
+      });
+    });
   };
 }

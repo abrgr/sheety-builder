@@ -1,4 +1,9 @@
 import React, { Component } from 'react';
+import { connect } from 'react-redux';
+import CircularProgress from 'material-ui/CircularProgress';
+import TextField from 'material-ui/TextField';
+import RaisedButton from 'material-ui/RaisedButton';
+import { editorActions } from '../action-creators';
 
 class Importer extends Component {
   constructor(props) {
@@ -10,16 +15,43 @@ class Importer extends Component {
   }
 
   render() {
+    const { isLoading, error } = this.props;
+
+    if ( isLoading ) {
+      return (
+        <div
+          style={{ margin: 20 }}>
+          <CircularProgress
+            size={80}
+            thickness={5} />
+        </div>
+      );
+    }
+
+    if ( error ) {
+      return (
+        <p>
+          An error occured!
+        </p>
+      );
+    }
+
     return (
-      <form onSubmit={this.onImport}>
-        <input
-          type="text"
-          onChange={this.onSheetIdChanged}
-          value={this.state.sheetId} />
-        <button type="submit">
-          Import Sheet
-        </button>
-      </form>
+      <div>
+        <div style={{ margin: 20 }}>
+          <TextField
+            floatingLabelText='Spreadsheet ID'
+            hintText='From the URL of your Google Sheet'
+            value={this.state.sheetId}
+            onChange={this.onSheetIdChanged} />
+        </div>
+        <div style={{ margin: 20 }}>
+          <RaisedButton
+            primary={true}
+            label='Import Sheet'
+            onClick={this.onImport} />
+        </div>
+      </div>
     );
   }
 
@@ -29,8 +61,13 @@ class Importer extends Component {
 
   onImport = (evt) => {
     evt.preventDefault();
-    this.props.history.push(`/${this.state.sheetId}`);
+    this.props.dispatch(editorActions.importSheet(this.state.sheetId));
   };
 }
 
-export default Importer;
+export default connect(
+  ({ editor }) => ({
+    isLoading: editor.get('isLoading'),
+    error: editor.get('error')
+  })
+)(Importer);
