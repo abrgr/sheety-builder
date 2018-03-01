@@ -7,6 +7,8 @@ import { List as MList, ListItem } from 'material-ui/List';
 import AddIcon from 'material-ui/svg-icons/content/add';
 import FloatingActionButton from 'material-ui/FloatingActionButton';
 import Slider from 'material-ui/Slider';
+import SelectField from 'material-ui/SelectField';
+import MenuItem from 'material-ui/MenuItem';
 import configurersAndSchemasBySchemaURI from 'sheety-core-presenters/dist/configurer';
 
 import 'react-quill/dist/quill.snow.css';
@@ -202,6 +204,17 @@ const FieldFormPart = ({ schema, path, presenter, onEditPresenter, onUpdate }) =
 
 const StringFormPart = ({ schema, path, presenter, onUpdate }) => {
   const { title, description } = schema;
+
+  if ( !!schema.enum ) {
+    return (
+      <EnumFormPart
+        schema={schema}
+        path={path}
+        presenter={presenter}
+        onUpdate={onUpdate} />
+    );
+  }
+
   return (
     <TextField
       floatingLabelText={title}
@@ -210,6 +223,26 @@ const StringFormPart = ({ schema, path, presenter, onUpdate }) => {
       onChange={(evt) => {
         onUpdate(path, evt.target.value);
       }}/>
+  );
+};
+
+const EnumFormPart = ({ schema, path, presenter, onUpdate }) => {
+  const { title, description } = schema;
+  return (
+    <SelectField
+      floatingLabelText={title}
+      hintText={description}
+      value={presenter.getIn(path, '')}
+      onChange={(_, _1, value) => {
+        onUpdate(path, value);
+      }}>
+      {schema.enum.map(enumVal => (
+        <MenuItem
+          key={enumVal}
+          value={enumVal}
+          primaryText={enumVal} />
+      ))}
+    </SelectField>
   );
 };
 
@@ -232,6 +265,8 @@ const IntegerFormPart = ({ schema, path, presenter, onUpdate }) => {
   const { title, description } = schema;
   return (
     <div>
+      <p>{title} - {description}:</p>
+      <p>{presenter.getIn(path)}</p>
       <Slider
         min={schema.minimum || 0}
         max={schema.maximum || 1000}
@@ -240,7 +275,6 @@ const IntegerFormPart = ({ schema, path, presenter, onUpdate }) => {
         onChange={(_, newVal) => {
           onUpdate(path, newVal);
         }} />
-      <p>{description}</p>
     </div>
   );
 };

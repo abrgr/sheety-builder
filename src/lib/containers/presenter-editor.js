@@ -22,6 +22,8 @@ class PresenterEditor extends Component {
       dispatch
     } = this.props;
 
+    const presenterComponent = presentersByType.get(presenter.getIn(editingPresenterPath.concat(['type'])));
+
     return (
       <div style={{clear: 'both'}}>
         <div style={{float: 'left', width: '70%' }}>
@@ -46,6 +48,7 @@ class PresenterEditor extends Component {
             onSelectPath={this.onSelectPresenterForEditing} />
           <Pallette
             presentersByType={presentersByType}
+            expanded={!presenterComponent}
             onSelected={(selectedPresenterType) => {
               dispatch(
                 editorActions.updatePresenterAtPath(
@@ -55,7 +58,7 @@ class PresenterEditor extends Component {
               )
             }} />
           <Configurator
-            presenterComponent={presentersByType.get(presenter.getIn(editingPresenterPath.concat(['type'])))}
+            presenterComponent={presenterComponent}
             presenter={presenter.getIn(editingPresenterPath)}
             onUpdate={(path, newValue) => {
               dispatch(

@@ -1,8 +1,8 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import CircularProgress from 'material-ui/CircularProgress';
-import TextField from 'material-ui/TextField';
-import RaisedButton from 'material-ui/RaisedButton';
+import ImporterComponent from '../components/importer';
+import SheetLogicEditor from '../components/sheet-logic-editor';
 import { editorActions } from '../action-creators';
 
 class Importer extends Component {
@@ -15,18 +15,7 @@ class Importer extends Component {
   }
 
   render() {
-    const { isLoading, error } = this.props;
-
-    if ( isLoading ) {
-      return (
-        <div
-          style={{ margin: 20 }}>
-          <CircularProgress
-            size={80}
-            thickness={5} />
-        </div>
-      );
-    }
+    const { isLoading, error, calc, model } = this.props;
 
     if ( error ) {
       return (
@@ -38,18 +27,25 @@ class Importer extends Component {
 
     return (
       <div>
-        <div style={{ margin: 20 }}>
-          <TextField
-            floatingLabelText='Spreadsheet ID'
-            hintText='From the URL of your Google Sheet'
-            value={this.state.sheetId}
-            onChange={this.onSheetIdChanged} />
-        </div>
-        <div style={{ margin: 20 }}>
-          <RaisedButton
-            primary={true}
-            label='Import Sheet'
-            onClick={this.onImport} />
+        <ImporterComponent
+          sheetId={this.state.sheetId}
+          onSheetIdChanged={this.onSheetIdChanged}
+          onImport={this.onImport} />
+        <div
+          style={{ margin: 20 }}>
+          {isLoading
+            ? (
+              <CircularProgress
+                mode='indeterminate'
+                size={80}
+                thickness={5} />
+            ) : (
+              <SheetLogicEditor
+                calc={calc} />
+            )}
+          <pre>
+            {JSON.stringify(model && model.toJS())}
+          </pre>
         </div>
       </div>
     );
@@ -68,6 +64,8 @@ class Importer extends Component {
 export default connect(
   ({ editor }) => ({
     isLoading: editor.get('isLoading'),
-    error: editor.get('error')
+    error: editor.get('error'),
+    calc: editor.get('calc'),
+    model: editor.get('model')
   })
 )(Importer);

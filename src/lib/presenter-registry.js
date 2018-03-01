@@ -1,6 +1,8 @@
 import React, { cloneElement, Children } from 'react';
-import { Map, fromJS } from 'immutable';
+import { connect } from 'react-redux';
+import { List, Map, fromJS } from 'immutable';
 import AJV from 'ajv';
+import { CellRefRange } from 'sheety-model';
 import { green400, grey400 } from 'material-ui/styles/colors';
 import makeCorePresenters from 'sheety-core-presenters/dist/builder';
 import configurersAndSchemasBySchemaURI from 'sheety-core-presenters/dist/configurer';
@@ -44,38 +46,83 @@ function equalPaths(path, selectedPath) {
   return path.every((p, idx) => p === selectedPath[idx]);
 }
 
-const PresenterContainer = (props) => (
-  <div
-    style={{
-      border: equalPaths(props.path, props.selectedPath)
-            ? `2px solid ${green400}`
-            : `2px dashed ${grey400}`,
-      margin: 5,
-      minHeight: 10,
-      minWidth: 5
-    }}
-    onClick={(evt) => {
-      evt.stopPropagation();
-      props.onSelectPresenterForEditing(props.path);
-    }}>
-    {cloneElement(
-      Children.only(props.children),
-      {
-        config: props.config,
-        mapData: (props.mapDataQuery || new Map()).map(query => props.calc.evaluateFormula(query)),
-        arrayData: [[]],
-        arrayCells: [[]],
-        arrayDataQuery: props.arrayDataQuery,
-        mapDataQuery: props.mapDataQuery,
-        sheet: props.sheet,
-        setCellValues: (values) => { console.log(values); },
-        path: props.path,
-        onSelectPresenterForEditing: props.onSelectPresenterForEditing,
-        renderPresenter: renderPresenter.bind(null, props.presentersByType, props.calc, props.selectedPath, props.onSelectPresenterForEditing, props.path)
-      }
-    )}
-  </div>
+const PresenterContainer = connect(
+  ({ editor }) => ({
+    calc: editor.get('calc')
+  })
+)(
+  (props) => (
+    <div
+      style={{
+        border: equalPaths(props.path, props.selectedPath)
+              ? `2px solid ${green400}`
+              : `2px dashed ${grey400}`,
+        margin: 5,
+        minHeight: 10,
+        minWidth: 5
+      }}
+      onClick={(evt) => {
+        evt.stopPropagation();
+        props.onSelectPresenterForEditing(props.path);
+      }}>
+      {cloneElement(
+        Children.only(props.children),
+        {
+          config: props.config,
+          mapData: (props.mapDataQuery || new Map()).map(query => props.calc.evaluateFormula(query)),
+          arrayData: getArrayData(props.calc, props.arrayDataQuery, props.formatted),
+          arrayCells: getArrayCells(props.calc, props.arrayDataQuery),
+          arrayDataQuery: props.arrayDataQuery,
+          mapDataQuery: props.mapDataQuery,
+          sheet: props.sheet,
+          setCellValues: (values) => { console.log(values); },
+          path: props.path,
+          onSelectPresenterForEditing: props.onSelectPresenterForEditing,
+          renderPresenter: renderPresenter.bind(null, props.presentersByType, props.calc, props.selectedPath, props.onSelectPresenterForEditing, props.path)
+        }
+      )}
+    </div>
+  )
 );
+
+function getArrayData(calc, query, formatted) {
+  if ( !query ) {
+    return new List(); // TODO: logging?
+  }
+
+  const a1Range = CellRefRange.fromA1Ref(query);
+  const matrix = formatted
+               ? calc.getFormattedRange(a1Range)
+               : calc.getRange(a1Range);
+  const maxCols = matrix.reduce((max, row) => (
+    !!row ? Math.max(max, row.length) : max
+  ), 0);
+  return matrix.map(row => {
+    const r = row || [];
+    return r.concat(getSpacer(maxCols - r.length))
+  });
+}
+
+function getArrayCells(calc, query) {
+  if ( !query ) {
+    return [];
+  }
+
+  const rangeRef = CellRefRange.fromA1Ref(query);
+  const sheet = calc.sheet;
+  return sheet.mapRange(
+    rangeRef,
+    sheet.getCell.bind(sheet)
+  );
+}
+
+function getSpacer(len) {
+  const spacer = [];
+  for ( let i = 0; i < len; ++i ) {
+    spacer.push('');
+  }
+  return spacer;
+}
 
 export function renderPresenter(presentersByType, calc, selectedPath, onSelectPresenterForEditing, basePath, nextPath, presenter) {
   const Presenter = presenter && presentersByType.get(presenter.get('type'));
@@ -98,7 +145,7 @@ export function renderPresenter(presentersByType, calc, selectedPath, onSelectPr
   );
 }
 
-export default function loadPresenters() {
+export default function loadPresenters(resolvers) {
   let presentersByType = new Map();
   makeCorePresenters(
     presenter,
