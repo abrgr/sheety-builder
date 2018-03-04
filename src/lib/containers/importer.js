@@ -36,9 +36,7 @@ class Importer extends Component {
           {isLoading
             ? (
               <CircularProgress
-                mode='indeterminate'
-                size={80}
-                thickness={5} />
+                mode='indeterminate' />
             ) : (
               <SheetLogicEditor
                 calc={calc} />

@@ -1,9 +1,10 @@
 import React, { Component } from 'react';
 import { Map } from 'immutable';
+import { CellRefRange } from 'sheety-model';
 import { Tabs, Tab } from 'material-ui/Tabs';
 import loadPresenters from '../presenter-registry';
 
-const presentersByType = loadPresenters();
+const presentersByType = loadPresenters(false);
 const Spreadsheet = presentersByType.get('spreadsheet');
 
 export default class SheetLogicEditor extends Component {
@@ -39,7 +40,22 @@ export default class SheetLogicEditor extends Component {
                          showColumnHeaders: true,
                          showRowHeaders: true
                        })}
-                       arrayDataQuery={`'${tabName}'!A1:Z100`} />
+                       arrayDataQuery={
+                         new CellRefRange({
+                           start: {
+                             tabId: tabName,
+                             rowIdx: 0,
+                             colIdx: 0
+                           },
+                           end: {
+                             tabId: tabName,
+                             rowIdx: calc.vals.get(tabName).size - 1,
+                             colIdx: calc.vals.get(tabName).reduce((theMax, row) => (
+                               Math.max(theMax, row.size - 1)
+                             ), 0)
+                           }
+                         }).toA1Ref()
+                       } />
                    ) : null}
                </Tab>
              ))}

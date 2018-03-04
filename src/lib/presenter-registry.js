@@ -1,6 +1,6 @@
 import React, { cloneElement, Children } from 'react';
 import { connect } from 'react-redux';
-import { List, Map, fromJS } from 'immutable';
+import { Map, fromJS } from 'immutable';
 import AJV from 'ajv';
 import { CellRefRange } from 'sheety-model';
 import { green400, grey400 } from 'material-ui/styles/colors';
@@ -15,25 +15,28 @@ configurersAndSchemasBySchemaURI.valueSeq().forEach(schemaAndUri => {
 
 // TODO: figure out some way to share this code with sheety-app's presenter
 
-function presenter({ formatted, schema }) {
-  return (Component) => {
-    const WrappedComponent = (props) => (
-      <PresenterContainer
-        {...props}
-        formatted={formatted}>
-        <Component />
-      </PresenterContainer>
-    );
+function makePresenter(shouldHandleClicks) {
+  return ({ formatted, schema }) => {
+    return (Component) => {
+      const WrappedComponent = (props) => (
+        <PresenterContainer
+          {...props}
+          formatted={formatted}
+          shouldHandleClicks={shouldHandleClicks}>
+          <Component />
+        </PresenterContainer>
+      );
 
-    WrappedComponent.schema = schema;
-    WrappedComponent.validateSchema = schema ? ajv.compile(schema.toJS()) : () => true;
-    WrappedComponent.defaultPresenter = () => {
-      const p = {};
-      WrappedComponent.validateSchema(p);
-      return fromJS(p);
+      WrappedComponent.schema = schema;
+      WrappedComponent.validateSchema = schema ? ajv.compile(schema.toJS()) : () => true;
+      WrappedComponent.defaultPresenter = () => {
+        const p = {};
+        WrappedComponent.validateSchema(p);
+        return fromJS(p);
+      };
+
+      return WrappedComponent;
     };
-
-    return WrappedComponent;
   };
 }
 
@@ -53,17 +56,20 @@ const PresenterContainer = connect(
 )(
   (props) => (
     <div
-      style={{
-        border: equalPaths(props.path, props.selectedPath)
-              ? `2px solid ${green400}`
-              : `2px dashed ${grey400}`,
-        margin: 5,
-        minHeight: 10,
-        minWidth: 5
-      }}
+      style={props.shouldHandleClicks
+        ? {
+          border: equalPaths(props.path, props.selectedPath)
+                ? `2px solid ${green400}`
+                : `2px dashed ${grey400}`,
+          margin: 5,
+          minHeight: 10,
+          minWidth: 5
+        } : undefined}
       onClick={(evt) => {
-        evt.stopPropagation();
-        props.onSelectPresenterForEditing(props.path);
+        if ( props.shouldHandleClicks ) {
+          evt.stopPropagation();
+          props.onSelectPresenterForEditing(props.path);
+        }
       }}>
       {cloneElement(
         Children.only(props.children),
@@ -87,10 +93,14 @@ const PresenterContainer = connect(
 
 function getArrayData(calc, query, formatted) {
   if ( !query ) {
-    return new List(); // TODO: logging?
+    return []; // TODO: logging?
   }
 
   const a1Range = CellRefRange.fromA1Ref(query);
+  if ( !a1Range ) {
+    return [];
+  }
+
   const matrix = formatted
                ? calc.getFormattedRange(a1Range)
                : calc.getRange(a1Range);
@@ -109,6 +119,11 @@ function getArrayCells(calc, query) {
   }
 
   const rangeRef = CellRefRange.fromA1Ref(query);
+
+  if ( !rangeRef ) {
+    return [];
+  }
+
   const sheet = calc.sheet;
   return sheet.mapRange(
     rangeRef,
@@ -135,6 +150,7 @@ export function renderPresenter(presentersByType, calc, selectedPath, onSelectPr
   return (
     <Presenter
       calc={calc}
+      sheet={calc.sheet}
       path={path}
       selectedPath={selectedPath}
       config={presenter.get('config', new Map())}
@@ -145,10 +161,10 @@ export function renderPresenter(presentersByType, calc, selectedPath, onSelectPr
   );
 }
 
-export default function loadPresenters(resolvers) {
+export default function loadPresenters(shouldHandleClicks=true) {
   let presentersByType = new Map();
   makeCorePresenters(
-    presenter,
+    makePresenter(shouldHandleClicks),
     {
       presenterRegistry: (type, component) => {
         presentersByType = presentersByType.set(type, component);

@@ -30,9 +30,6 @@ export default function sheetToModel(spreadsheet) {
               return new Cell({
                 staticValue,
                 formula: !isIgnoredFunc && formulaValue ? formulaValue.replace(/^=/, '') : null,
-                isUserEditable: false, // TODO
-                link: cellValue.hyperlink,
-                remoteValue: null, // TODO
                 format: format ? {
                   type: format.type,
                   pattern: format.pattern
