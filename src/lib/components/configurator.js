@@ -303,35 +303,61 @@ const StringFormPart = ({ schema, path, presenter, onSetLinkPath, onClearLinkPat
 
 const EnumFormPart = ({ schema, path, presenter, onSetLinkPath, onClearLinkPath, onUpdate }) => {
   const { title, description } = schema;
+  const value = presenter.getIn(path, '');
+
   return (
-    <SelectField
-      floatingLabelText={title}
-      hintText={description}
-      value={presenter.getIn(path, '')}
-      onChange={(_, _1, value) => {
-        onUpdate(path, value);
-      }}>
-      {schema.enum.map(enumVal => (
-        <MenuItem
-          key={enumVal}
-          value={enumVal}
-          primaryText={enumVal} />
-      ))}
-    </SelectField>
+    <StaticOrLinkedValue
+      title={title}
+      description={description}
+      path={path}
+      schema={schema}
+      value={value}
+      onUpdate={onUpdate}
+      onSetLinkPath={onSetLinkPath}
+      onClearLinkPath={onClearLinkPath}>
+      <SelectField
+        floatingLabelText={title}
+        hintText={description}
+        value={value || ''}
+        onChange={(_, _1, value) => {
+          onUpdate(path, value);
+        }}>
+        {schema.enum.map(enumVal => (
+          <MenuItem
+            key={enumVal}
+            value={enumVal}
+            primaryText={enumVal} />
+        ))}
+      </SelectField>
+    </StaticOrLinkedValue>
   );
 };
 
 const BooleanFormPart = ({ schema, path, presenter, onSetLinkPath, onClearLinkPath, onUpdate }) => {
   const { title, description } = schema;
+  const value = presenter.getIn(path, false);
+
   return (
     <div>
-      <Toggle
-        label={title}
-        toggled={presenter.getIn(path, '')}
-        onToggle={(_, isChecked) => {
-          onUpdate(path, isChecked);
-        }}/>
-      <p>{description}</p>
+      <StaticOrLinkedValue
+        title={title}
+        description={description}
+        path={path}
+        schema={schema}
+        value={'' + value}
+        onUpdate={onUpdate}
+        onSetLinkPath={onSetLinkPath}
+        onClearLinkPath={onClearLinkPath}>
+        <div>
+          <Toggle
+            label={title}
+            toggled={!!value}
+            onToggle={(_, isChecked) => {
+              onUpdate(path, isChecked);
+            }}/>
+          <p>{description}</p>
+        </div>
+      </StaticOrLinkedValue>
     </div>
   );
 };

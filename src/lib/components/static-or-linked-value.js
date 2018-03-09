@@ -25,7 +25,7 @@ export default ({
           flexDirection: 'row'
         }}>
         <IconButton
-          tooltip={isLinked ? 'Link to spreadsheet' : 'Unlink'}
+          tooltip={isLinked ? 'Unlink': 'Link to spreadsheet'}
           onClick={() => {
             if ( isLinked ) {
               onUpdate(path, null);
