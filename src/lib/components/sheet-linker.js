@@ -101,6 +101,7 @@ export default class SheetLinker extends Component {
                 autoRowSize={true}
                 autoColSize={true}
                 preventOverflow={true}
+                multiSelect={allowMultiSelection}
                 afterSelection={(startRow, startCol, endRow, endCol) => {
                   if ( allowMultiSelection ) {
                     const selectedRange = new CellRefRange({
