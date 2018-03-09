@@ -5,14 +5,12 @@ import TextField from 'material-ui/TextField';
 import Toggle from 'material-ui/Toggle';
 import { List as MList, ListItem } from 'material-ui/List';
 import AddIcon from 'material-ui/svg-icons/content/add';
-import LinkSheetIcon from 'material-ui/svg-icons/image/grid-on';
 import FloatingActionButton from 'material-ui/FloatingActionButton';
-import IconButton from 'material-ui/IconButton';
 import Slider from 'material-ui/Slider';
 import SelectField from 'material-ui/SelectField';
 import MenuItem from 'material-ui/MenuItem';
-import { cyanA700 } from 'material-ui/styles/colors';
 import SheetLinker from './sheet-linker';
+import StaticOrLinkedValue from './static-or-linked-value';
 import configurersAndSchemasBySchemaURI from 'sheety-core-presenters/dist/configurer';
 
 export default ({
@@ -280,28 +278,26 @@ const StringFormPart = ({ schema, path, presenter, onSetLinkPath, onClearLinkPat
     );
   }
 
+  const value = presenter.getIn(path, '');
+
   return (
-    <div
-      style={{
-        display: 'flex',
-        flexDirection: 'row'
-      }}>
-      <IconButton
-        tooltip="Link to spreadsheet"
-        onClick={() => {
-          onSetLinkPath(path, schema);
-        }}>
-        <LinkSheetIcon
-          color={cyanA700} />
-      </IconButton>
+    <StaticOrLinkedValue
+      title={title}
+      description={description}
+      path={path}
+      schema={schema}
+      value={value}
+      onUpdate={onUpdate}
+      onSetLinkPath={onSetLinkPath}
+      onClearLinkPath={onClearLinkPath}>
       <TextField
         floatingLabelText={title}
         hintText={description}
-        value={presenter.getIn(path, '')}
+        value={value || ''}
         onChange={(evt) => {
           onUpdate(path, evt.target.value);
         }} />
-    </div>
+    </StaticOrLinkedValue>
   );
 };
 

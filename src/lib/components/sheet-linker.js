@@ -16,9 +16,12 @@ export default class SheetLinker extends Component {
   constructor(props) {
     super(props);
 
+    const isRef = !!CellRef.fromA1Ref(props.value)
+                || !!CellRefRange.fromA1Ref(props.value);
+
     this.state = {
       id: `sheet-${uuid.v4()}`,
-      value: props.value
+      value: isRef ? props.value : ''
     };
   }
 
