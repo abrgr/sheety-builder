@@ -19,6 +19,7 @@ class PresenterEditor extends Component {
       presenter,
       presentersByType,
       editingPresenterPath,
+      linkPath,
       dispatch
     } = this.props;
 
@@ -60,21 +61,33 @@ class PresenterEditor extends Component {
           <Configurator
             presenterComponent={presenterComponent}
             presenter={presenter.getIn(editingPresenterPath)}
+            linkPath={linkPath}
+            calc={calc}
             onUpdate={(path, newValue) => {
               dispatch(
                 editorActions.updatePresenterAtPath(
                   editingPresenterPath.concat(path),
                   newValue
                 )
-              )
+              );
             }}
             onEditPresenter={(newPathPart) => {
               dispatch(
                 editorActions.setEditingPresenterPath(
                   editingPresenterPath.concat(newPathPart)
                 )
-              )
-            }}/>
+              );
+            }}
+            onSetLinkPath={(linkPath) => {
+              dispatch(
+                editorActions.setLinkPath(linkPath)
+              );
+            }}
+            onClearLinkPath={() => {
+              dispatch(
+                editorActions.clearLinkPath()
+              );
+            }} />
         </div>
       </div>
     );
@@ -94,6 +107,7 @@ export default connect(
     calc: editor.get('calc'),
     presentersByType: editor.get('presentersByType'),
     presenter: editor.get('presenter'),
-    editingPresenterPath: editor.get('editingPresenterPath')
+    editingPresenterPath: editor.get('editingPresenterPath'),
+    linkPath: editor.get('linkPath')
   })
 )(PresenterEditor);

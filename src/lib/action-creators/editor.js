@@ -9,7 +9,9 @@ import {
   TOGGLE_MAIN_EDITOR_MENU,
   RECEIVED_SPREADSHEET_ID,
   RECEIVED_MODEL,
-  RECEIVED_IMPORT_ERROR
+  RECEIVED_IMPORT_ERROR,
+  SET_LINK_PATH,
+  CLEAR_LINK_PATH
 } from '../actions';
 import { saveApp } from '../persistence';
 import { getSpreadsheet } from '../google';
@@ -94,5 +96,18 @@ export function importSheet(spreadsheetId) {
         err
       });
     });
+  };
+}
+
+export function setLinkPath(linkPath) {
+  return {
+    type: SET_LINK_PATH,
+    linkPath
+  };
+}
+
+export function clearLinkPath() {
+  return {
+    type: CLEAR_LINK_PATH
   };
 }

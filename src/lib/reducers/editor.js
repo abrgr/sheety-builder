@@ -2,59 +2,11 @@ import { Record, Map } from 'immutable';
 import Calculator from 'sheety-calculator';
 import * as actions from '../actions';
 
-const PresenterDescriptor = new Record({
-  type: null,
-  name: null,
-  icon: null,
-  config: new Map(),
-  mapDataQuery: new Map(),
-  arrayData: null
-});
-
-const ConfigurerDescriptor = new Record({
-  type: null,
-  description: null
-});
-
 const initialState = new Record({
   appId: '',
-  availablePresenters: new Map({
-    'grid-layout': new PresenterDescriptor({
-      type: 'grid-layout',
-      name: 'Grid Layout',
-      icon: 'favicon.ico',
-      config: new Map({
-        rows: new ConfigurerDescriptor({
-          type: 'rows',
-          description: 'Rows are cool'
-        })
-      })
-    }),
-    text: new PresenterDescriptor({
-      type: 'text',
-      name: 'Text',
-      icon: 'favicon.ico',
-      mapDataQuery: new Map({
-        text: new ConfigurerDescriptor({
-          type: 'formula',
-          description: 'A formula for the text to show'
-        })
-      })
-    }),
-    content: new PresenterDescriptor({
-      type: 'content',
-      name: 'Content',
-      icon: 'favicon.ico',
-      config: new Map({
-        content: new ConfigurerDescriptor({
-          type: 'wysiwyg-content',
-          description: 'Content to show'
-        })
-      })
-    })
-  }),
   presenter: new Map(),
   editingPresenterPath: [],
+  linkPath: null,
   presentersByType: new Map(),
   isMainMenuOpen: false,
   isLoading: false,
@@ -94,6 +46,10 @@ export default function editor(state = initialState, action) {
         model: null,
         error: action.err
       }); 
+    case actions.SET_LINK_PATH:
+      return state.set('linkPath', action.linkPath);
+    case actions.CLEAR_LINK_PATH:
+      return state.set('linkPath', null);
     default:
       return state;
   }

@@ -8,6 +8,7 @@ import reducers from './lib/reducers';
 
 import 'bootstrap/dist/css/bootstrap-grid.css';
 import 'firebaseui/dist/firebaseui.css';
+import 'react-quill/dist/quill.snow.css';
 
 class App extends Component {
   render() {

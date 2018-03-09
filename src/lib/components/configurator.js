@@ -5,19 +5,25 @@ import TextField from 'material-ui/TextField';
 import Toggle from 'material-ui/Toggle';
 import { List as MList, ListItem } from 'material-ui/List';
 import AddIcon from 'material-ui/svg-icons/content/add';
+import LinkSheetIcon from 'material-ui/svg-icons/image/grid-on';
 import FloatingActionButton from 'material-ui/FloatingActionButton';
+import IconButton from 'material-ui/IconButton';
 import Slider from 'material-ui/Slider';
 import SelectField from 'material-ui/SelectField';
 import MenuItem from 'material-ui/MenuItem';
+import { cyanA700 } from 'material-ui/styles/colors';
+import SheetLinker from './sheet-linker';
 import configurersAndSchemasBySchemaURI from 'sheety-core-presenters/dist/configurer';
-
-import 'react-quill/dist/quill.snow.css';
 
 export default ({
   presenterComponent,
   presenter,
   onUpdate,
-  onEditPresenter
+  onEditPresenter,
+  onSetLinkPath,
+  onClearLinkPath,
+  linkPath,
+  calc
 }) => {
   if ( !presenterComponent ) {
     // TODO: render presenter schema
@@ -26,28 +32,67 @@ export default ({
 
   const schema = presenterComponent.schema.toJS();
   const { title, description, properties } = schema;
+  const usablePresenter = presenter || new Map();
 
   return (
-    <Card>
-      <CardHeader
-        title={title}
-        subtitle={description} />
-      <CardText>
-        {Object.keys(properties || {}).map(prop => (
-          <FormPart
-            key={prop}
-            schema={properties[prop]}
-            path={[prop]}
-            onEditPresenter={onEditPresenter}
-            onUpdate={onUpdate}
-            presenter={presenter || new Map()} />
-        ))}
-      </CardText>
-    </Card>
+    <div>
+      {linkPath
+        ? (
+          <SheetLinker
+            calc={calc}
+            value={usablePresenter.getIn(linkPath)}
+            schema={getSchemaAtPath(presenterComponent.schema, linkPath)}
+            onUpdate={(val) => {
+              onUpdate(linkPath, val);
+            }}
+            onClearLinkPath={onClearLinkPath} />
+        ) : null}
+      <Card>
+        <CardHeader
+          title={title}
+          subtitle={description} />
+        <CardText>
+          {Object.keys(properties || {}).map(prop => (
+            <FormPart
+              key={prop}
+              schema={properties[prop]}
+              path={[prop]}
+              onEditPresenter={onEditPresenter}
+              onUpdate={onUpdate}
+              onSetLinkPath={onSetLinkPath}
+              onClearLinkPath={onClearLinkPath}
+              presenter={usablePresenter} />
+          ))}
+        </CardText>
+      </Card>
+    </div>
   );
 };
 
-const FormPart = ({ schema, path, presenter, onEditPresenter, onUpdate }) => {
+const getSchemaAtPath = (schema, path) => {
+  if ( !schema ) {
+    return null;
+  }
+
+  const firstPart = path[0];
+
+  const propertyMatch = schema.getIn(['properties', firstPart]);
+  if ( propertyMatch ) {
+    return getSchemaAtPath(propertyMatch, path.slice(1));
+  }
+
+  const arrayMatch = schema.get('type') === 'array'
+                   ? schema.get('items')
+                   : null;
+  if ( arrayMatch ) {
+    return getSchemaAtPath(arrayMatch, path.slice(1));
+  }
+
+  // TODO: more?
+  return null;
+};
+
+const FormPart = ({ schema, path, presenter, onEditPresenter, onSetLinkPath, onClearLinkPath, onUpdate }) => {
   const { type, $ref } = schema;
 
   if ( $ref ) {
@@ -62,7 +107,9 @@ const FormPart = ({ schema, path, presenter, onEditPresenter, onUpdate }) => {
           onEditPresenter={onEditPresenter}
           onUpdate={(value) => {
             onUpdate(path, value);
-          }}/>
+          }}
+          onSetLinkPath={onSetLinkPath}
+          onClearLinkPath={onClearLinkPath} />
       ) : (
         <p>
           Oops, we have no configurer for a {$ref}.
@@ -83,7 +130,9 @@ const FormPart = ({ schema, path, presenter, onEditPresenter, onUpdate }) => {
           path={path}
           presenter={presenter}
           onEditPresenter={onEditPresenter}
-          onUpdate={onUpdate} />
+          onUpdate={onUpdate}
+          onSetLinkPath={onSetLinkPath}
+          onClearLinkPath={onClearLinkPath} />
       );
     case 'array':
       return (
@@ -92,7 +141,9 @@ const FormPart = ({ schema, path, presenter, onEditPresenter, onUpdate }) => {
           path={path}
           presenter={presenter}
           onEditPresenter={onEditPresenter}
-          onUpdate={onUpdate} />
+          onUpdate={onUpdate}
+          onSetLinkPath={onSetLinkPath}
+          onClearLinkPath={onClearLinkPath} />
       );
     default:
       return (
@@ -101,12 +152,14 @@ const FormPart = ({ schema, path, presenter, onEditPresenter, onUpdate }) => {
           path={path}
           presenter={presenter}
           onEditPresenter={onEditPresenter}
-          onUpdate={onUpdate} />
+          onUpdate={onUpdate}
+          onSetLinkPath={onSetLinkPath}
+          onClearLinkPath={onClearLinkPath} />
       );
   }
 };
 
-const ObjectFormPart = ({ schema, path, presenter, onEditPresenter, onUpdate }) => {
+const ObjectFormPart = ({ schema, path, presenter, onEditPresenter, onSetLinkPath, onClearLinkPath, onUpdate }) => {
   const { title, description, properties } = schema;
   return (
     <div>
@@ -119,13 +172,15 @@ const ObjectFormPart = ({ schema, path, presenter, onEditPresenter, onUpdate }) 
           path={path.concat([prop])}
           presenter={presenter}
           onEditPresenter={onEditPresenter}
-          onUpdate={onUpdate} />
+          onUpdate={onUpdate}
+          onSetLinkPath={onSetLinkPath}
+          onClearLinkPath={onClearLinkPath} />
       ))}
     </div>
   );
 };
 
-const ArrayFormPart = ({ schema, path, presenter, onEditPresenter, onUpdate }) => {
+const ArrayFormPart = ({ schema, path, presenter, onEditPresenter, onSetLinkPath, onClearLinkPath, onUpdate }) => {
   const { title, description, items } = schema;
   const presenterItems = presenter.getIn(path, new List());
   return (
@@ -143,6 +198,8 @@ const ArrayFormPart = ({ schema, path, presenter, onEditPresenter, onUpdate }) =
                   path={path.concat([idx])}
                   onEditPresenter={onEditPresenter}
                   onUpdate={onUpdate}
+                  onSetLinkPath={onSetLinkPath}
+                  onClearLinkPath={onClearLinkPath}
                   presenter={presenter} />
             </ListItem>
           </div>
@@ -163,7 +220,7 @@ const ArrayFormPart = ({ schema, path, presenter, onEditPresenter, onUpdate }) =
   );
 };
 
-const FieldFormPart = ({ schema, path, presenter, onEditPresenter, onUpdate }) => {
+const FieldFormPart = ({ schema, path, presenter, onEditPresenter, onSetLinkPath, onClearLinkPath, onUpdate }) => {
   const { type } = schema;
   switch ( type ) {
     case 'string':
@@ -173,7 +230,9 @@ const FieldFormPart = ({ schema, path, presenter, onEditPresenter, onUpdate }) =
           path={path}
           presenter={presenter}
           onEditPresenter={onEditPresenter}
-          onUpdate={onUpdate} />
+          onUpdate={onUpdate}
+          onSetLinkPath={onSetLinkPath}
+          onClearLinkPath={onClearLinkPath} />
       );
     case 'boolean':
       return (
@@ -182,7 +241,9 @@ const FieldFormPart = ({ schema, path, presenter, onEditPresenter, onUpdate }) =
           path={path}
           presenter={presenter}
           onEditPresenter={onEditPresenter}
-          onUpdate={onUpdate} />
+          onUpdate={onUpdate}
+          onSetLinkPath={onSetLinkPath}
+          onClearLinkPath={onClearLinkPath} />
       );
     case 'integer':
       return (
@@ -191,7 +252,9 @@ const FieldFormPart = ({ schema, path, presenter, onEditPresenter, onUpdate }) =
           path={path}
           presenter={presenter}
           onEditPresenter={onEditPresenter}
-          onUpdate={onUpdate} />
+          onUpdate={onUpdate}
+          onSetLinkPath={onSetLinkPath}
+          onClearLinkPath={onClearLinkPath} />
       );
     default:
       return (
@@ -202,7 +265,7 @@ const FieldFormPart = ({ schema, path, presenter, onEditPresenter, onUpdate }) =
   }
 };
 
-const StringFormPart = ({ schema, path, presenter, onUpdate }) => {
+const StringFormPart = ({ schema, path, presenter, onSetLinkPath, onClearLinkPath, onUpdate }) => {
   const { title, description } = schema;
 
   if ( !!schema.enum ) {
@@ -211,22 +274,38 @@ const StringFormPart = ({ schema, path, presenter, onUpdate }) => {
         schema={schema}
         path={path}
         presenter={presenter}
-        onUpdate={onUpdate} />
+        onUpdate={onUpdate}
+        onSetLinkPath={onSetLinkPath}
+        onClearLinkPath={onClearLinkPath} />
     );
   }
 
   return (
-    <TextField
-      floatingLabelText={title}
-      hintText={description}
-      value={presenter.getIn(path, '')}
-      onChange={(evt) => {
-        onUpdate(path, evt.target.value);
-      }}/>
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'row'
+      }}>
+      <IconButton
+        tooltip="Link to spreadsheet"
+        onClick={() => {
+          onSetLinkPath(path, schema);
+        }}>
+        <LinkSheetIcon
+          color={cyanA700} />
+      </IconButton>
+      <TextField
+        floatingLabelText={title}
+        hintText={description}
+        value={presenter.getIn(path, '')}
+        onChange={(evt) => {
+          onUpdate(path, evt.target.value);
+        }} />
+    </div>
   );
 };
 
-const EnumFormPart = ({ schema, path, presenter, onUpdate }) => {
+const EnumFormPart = ({ schema, path, presenter, onSetLinkPath, onClearLinkPath, onUpdate }) => {
   const { title, description } = schema;
   return (
     <SelectField
@@ -246,7 +325,7 @@ const EnumFormPart = ({ schema, path, presenter, onUpdate }) => {
   );
 };
 
-const BooleanFormPart = ({ schema, path, presenter, onUpdate }) => {
+const BooleanFormPart = ({ schema, path, presenter, onSetLinkPath, onClearLinkPath, onUpdate }) => {
   const { title, description } = schema;
   return (
     <div>
@@ -261,7 +340,7 @@ const BooleanFormPart = ({ schema, path, presenter, onUpdate }) => {
   );
 };
 
-const IntegerFormPart = ({ schema, path, presenter, onUpdate }) => {
+const IntegerFormPart = ({ schema, path, presenter, onSetLinkPath, onClearLinkPath, onUpdate }) => {
   const { title, description } = schema;
   return (
     <div>
