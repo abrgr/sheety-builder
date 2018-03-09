@@ -95,19 +95,36 @@ const FormPart = ({ schema, path, presenter, onEditPresenter, onSetLinkPath, onC
 
   if ( $ref ) {
     const Configurer = configurersAndSchemasBySchemaURI.getIn([$ref, 'configurer']);
+    const value = presenter.getIn(path);
+    const { title, description } = schema;
+
     return Configurer
       ? (
-        <Configurer
-          schema={configurersAndSchemasBySchemaURI.getIn([$ref, 'schema'])}
+        <StaticOrLinkedValue
+          title={title}
+          description={description}
           path={path}
-          value={presenter.getIn(path, '')}
-          presenter={presenter}
-          onEditPresenter={onEditPresenter}
-          onUpdate={(value) => {
-            onUpdate(path, value);
-          }}
+          schema={schema}
+          value={'' + value}
+          onUpdate={onUpdate}
           onSetLinkPath={onSetLinkPath}
-          onClearLinkPath={onClearLinkPath} />
+          onClearLinkPath={onClearLinkPath}>
+          <div>
+            <Configurer
+              schema={configurersAndSchemasBySchemaURI.getIn([$ref, 'schema'])}
+              path={path}
+              value={value}
+              title={title}
+              description={description}
+              presenter={presenter}
+              onEditPresenter={onEditPresenter}
+              onUpdate={(value) => {
+                onUpdate(path, value);
+              }}
+              onSetLinkPath={onSetLinkPath}
+              onClearLinkPath={onClearLinkPath} />
+          </div>
+        </StaticOrLinkedValue>
       ) : (
         <p>
           Oops, we have no configurer for a {$ref}.
@@ -364,18 +381,29 @@ const BooleanFormPart = ({ schema, path, presenter, onSetLinkPath, onClearLinkPa
 
 const IntegerFormPart = ({ schema, path, presenter, onSetLinkPath, onClearLinkPath, onUpdate }) => {
   const { title, description } = schema;
+  const value = presenter.getIn(path);
   return (
-    <div>
-      <p>{title} - {description}:</p>
-      <p>{presenter.getIn(path)}</p>
-      <Slider
-        min={schema.minimum || 0}
-        max={schema.maximum || 1000}
-        step={1}
-        value={presenter.getIn(path)}
-        onChange={(_, newVal) => {
-          onUpdate(path, newVal);
-        }} />
-    </div>
+    <StaticOrLinkedValue
+      title={title}
+      description={description}
+      path={path}
+      schema={schema}
+      value={'' + value}
+      onUpdate={onUpdate}
+      onSetLinkPath={onSetLinkPath}
+      onClearLinkPath={onClearLinkPath}>
+      <div>
+        <p>{title} - {description}:</p>
+        <p>{presenter.getIn(path)}</p>
+        <Slider
+          min={schema.minimum || 0}
+          max={schema.maximum || 1000}
+          step={1}
+          value={value || schema.minimum || 0}
+          onChange={(_, newVal) => {
+            onUpdate(path, newVal);
+          }} />
+      </div>
+    </StaticOrLinkedValue>
   );
 };
