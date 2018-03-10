@@ -42,10 +42,12 @@ class PresenterEditor extends Component {
             filterFn={path => (
               !!presenter.getIn(path.concat('type'))
             )}
-            nameFn={path => (
-              presenter.getIn(path.concat('id'))
-                || presentersByType.get(presenter.getIn(path.concat('type'))).schema.get('title')
-            )}
+            nameFn={path => {
+              const idVal = presenter.getIn(path.concat('id'));
+              const typeVal = presenter.getIn(path.concat('type'));
+              return (idVal && calc.evaluateFormula(idVal))
+                  || presentersByType.get(typeVal).schema.get('title');
+            }}
             onSelectPath={this.onSelectPresenterForEditing} />
           <Pallette
             presentersByType={presentersByType}

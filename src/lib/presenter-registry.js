@@ -7,10 +7,10 @@ import { green400, grey400 } from 'material-ui/styles/colors';
 import makeCorePresenters from 'sheety-core-presenters/dist/builder';
 import configurersAndSchemasBySchemaURI from 'sheety-core-presenters/dist/configurer';
 
-const ajv = new AJV({ useDefaults: true });
+export const schemaRegistry = new AJV({ useDefaults: true });
 
 configurersAndSchemasBySchemaURI.valueSeq().forEach(schemaAndUri => {
-  ajv.addSchema(schemaAndUri.get('schema').toJS());
+  schemaRegistry.addSchema(schemaAndUri.get('schema').toJS());
 });
 
 // TODO: figure out some way to share this code with sheety-app's presenter
@@ -28,7 +28,7 @@ function makePresenter(shouldHandleClicks) {
       );
 
       WrappedComponent.schema = schema;
-      WrappedComponent.validateSchema = schema ? ajv.compile(schema.toJS()) : () => true;
+      WrappedComponent.validateSchema = schema ? schemaRegistry.compile(schema.toJS()) : () => true;
       WrappedComponent.defaultPresenter = () => {
         const p = {};
         WrappedComponent.validateSchema(p);

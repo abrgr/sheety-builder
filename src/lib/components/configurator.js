@@ -1,5 +1,5 @@
 import React from 'react';
-import { Map, List } from 'immutable';
+import { fromJS, Map, List } from 'immutable';
 import { Card, CardHeader, CardText } from 'material-ui/Card';
 import TextField from 'material-ui/TextField';
 import Toggle from 'material-ui/Toggle';
@@ -12,6 +12,7 @@ import MenuItem from 'material-ui/MenuItem';
 import SheetLinker from './sheet-linker';
 import StaticOrLinkedValue from './static-or-linked-value';
 import configurersAndSchemasBySchemaURI from 'sheety-core-presenters/dist/configurer';
+import { schemaRegistry } from '../presenter-registry';
 
 export default ({
   presenterComponent,
@@ -72,15 +73,23 @@ const getSchemaAtPath = (schema, path) => {
     return null;
   }
 
+  const effectiveSchema = schema.get('$ref')
+                        ? fromJS(schemaRegistry.getSchema(schema.get('$ref')).schema)
+                        : schema;
+
+  if ( !path.length ) {
+    return effectiveSchema;
+  }
+
   const firstPart = path[0];
 
-  const propertyMatch = schema.getIn(['properties', firstPart]);
+  const propertyMatch = effectiveSchema.getIn(['properties', firstPart]);
   if ( propertyMatch ) {
     return getSchemaAtPath(propertyMatch, path.slice(1));
   }
 
-  const arrayMatch = schema.get('type') === 'array'
-                   ? schema.get('items')
+  const arrayMatch = effectiveSchema.get('type') === 'array'
+                   ? effectiveSchema.get('items')
                    : null;
   if ( arrayMatch ) {
     return getSchemaAtPath(arrayMatch, path.slice(1));
@@ -90,17 +99,53 @@ const getSchemaAtPath = (schema, path) => {
   return null;
 };
 
+const MaybeWithLink = ({
+  linkable,
+  title,
+  description,
+  path,
+  schema,
+  value,
+  onUpdate,
+  onSetLinkPath,
+  onClearLinkPath,
+  children
+}) => (
+  linkable
+    ? (
+      <StaticOrLinkedValue
+        title={title}
+        description={description}
+        path={path}
+        schema={schema}
+        value={'' + value}
+        onUpdate={onUpdate}
+        onSetLinkPath={onSetLinkPath}
+        onClearLinkPath={onClearLinkPath}>
+        <div>
+          {children}
+        </div>
+      </StaticOrLinkedValue>
+    ) : (
+      <div>
+        {children}
+      </div>
+    )
+);
+
 const FormPart = ({ schema, path, presenter, onEditPresenter, onSetLinkPath, onClearLinkPath, onUpdate }) => {
   const { type, $ref } = schema;
 
   if ( $ref ) {
     const Configurer = configurersAndSchemasBySchemaURI.getIn([$ref, 'configurer']);
+    const linkable = configurersAndSchemasBySchemaURI.getIn([$ref, 'linkable']);
     const value = presenter.getIn(path);
     const { title, description } = schema;
 
     return Configurer
       ? (
-        <StaticOrLinkedValue
+        <MaybeWithLink
+          linkable={linkable}
           title={title}
           description={description}
           path={path}
@@ -109,22 +154,20 @@ const FormPart = ({ schema, path, presenter, onEditPresenter, onSetLinkPath, onC
           onUpdate={onUpdate}
           onSetLinkPath={onSetLinkPath}
           onClearLinkPath={onClearLinkPath}>
-          <div>
-            <Configurer
-              schema={configurersAndSchemasBySchemaURI.getIn([$ref, 'schema'])}
-              path={path}
-              value={value}
-              title={title}
-              description={description}
-              presenter={presenter}
-              onEditPresenter={onEditPresenter}
-              onUpdate={(value) => {
-                onUpdate(path, value);
-              }}
-              onSetLinkPath={onSetLinkPath}
-              onClearLinkPath={onClearLinkPath} />
-          </div>
-        </StaticOrLinkedValue>
+          <Configurer
+            schema={configurersAndSchemasBySchemaURI.getIn([$ref, 'schema'])}
+            path={path}
+            value={value}
+            title={title}
+            description={description}
+            presenter={presenter}
+            onEditPresenter={onEditPresenter}
+            onUpdate={(value) => {
+              onUpdate(path, value);
+            }}
+            onSetLinkPath={onSetLinkPath}
+            onClearLinkPath={onClearLinkPath} />
+        </MaybeWithLink>
       ) : (
         <p>
           Oops, we have no configurer for a {$ref}.
@@ -197,7 +240,23 @@ const ObjectFormPart = ({ schema, path, presenter, onEditPresenter, onSetLinkPat
 
 const ArrayFormPart = ({ schema, path, presenter, onEditPresenter, onSetLinkPath, onClearLinkPath, onUpdate }) => {
   const { title, description, items } = schema;
+  const isTuple = Array.isArray(items);
+
+  if ( isTuple ) {
+    return (
+      <ObjectFormPart
+        schema={items}
+        path={path}
+        presenter={presenter}
+        onEditPresenter={onEditPresenter}
+        onSetLinkPath={onSetLinkPath}
+        onClearLinkPath={onClearLinkPath}
+        onUpdate={onUpdate} />
+    );
+  }
+
   const presenterItems = presenter.getIn(path, new List());
+
   return (
     <div>
       <h2>{title}</h2>
@@ -280,6 +339,18 @@ const FieldFormPart = ({ schema, path, presenter, onEditPresenter, onSetLinkPath
   }
 };
 
+const stringFromFormula = (isLinkable, formula) => (
+  isLinkable
+    ?  ('' + formula).replace(/^'/, '').replace(/'$/, '')
+    : formula
+);
+
+const stringToFormula = (isLinkable, str) => (
+  isLinkable
+    ? `'${str}'`
+    : str
+);
+
 const StringFormPart = ({ schema, path, presenter, onSetLinkPath, onClearLinkPath, onUpdate }) => {
   const { title, description } = schema;
 
@@ -296,9 +367,11 @@ const StringFormPart = ({ schema, path, presenter, onSetLinkPath, onClearLinkPat
   }
 
   const value = presenter.getIn(path, '');
+  const isLinkable = schema.linkable !== false;
 
   return (
-    <StaticOrLinkedValue
+    <MaybeWithLink
+      linkable={isLinkable}
       title={title}
       description={description}
       path={path}
@@ -310,20 +383,22 @@ const StringFormPart = ({ schema, path, presenter, onSetLinkPath, onClearLinkPat
       <TextField
         floatingLabelText={title}
         hintText={description}
-        value={value || ''}
+        value={stringFromFormula(isLinkable, value)}
         onChange={(evt) => {
-          onUpdate(path, evt.target.value);
+          onUpdate(path, stringToFormula(isLinkable, evt.target.value));
         }} />
-    </StaticOrLinkedValue>
+    </MaybeWithLink>
   );
 };
 
 const EnumFormPart = ({ schema, path, presenter, onSetLinkPath, onClearLinkPath, onUpdate }) => {
   const { title, description } = schema;
   const value = presenter.getIn(path, '');
+  const isLinkable = schema.linkable !== false;
 
   return (
-    <StaticOrLinkedValue
+    <MaybeWithLink
+      linkable={isLinkable}
       title={title}
       description={description}
       path={path}
@@ -335,9 +410,9 @@ const EnumFormPart = ({ schema, path, presenter, onSetLinkPath, onClearLinkPath,
       <SelectField
         floatingLabelText={title}
         hintText={description}
-        value={value || ''}
+        value={stringFromFormula(isLinkable, value)}
         onChange={(_, _1, value) => {
-          onUpdate(path, value);
+          onUpdate(path, stringToFormula(isLinkable, value));
         }}>
         {schema.enum.map(enumVal => (
           <MenuItem
@@ -346,17 +421,31 @@ const EnumFormPart = ({ schema, path, presenter, onSetLinkPath, onClearLinkPath,
             primaryText={enumVal} />
         ))}
       </SelectField>
-    </StaticOrLinkedValue>
+    </MaybeWithLink>
   );
 };
+
+const boolFromFormula = (isLinkable, formula) => (
+  isLinkable
+    ? ('' + formula).toLowerCase() === 'true'
+    : formula
+);
+
+const boolToFormula = (isLinkable, b) => (
+  isLinkable
+    ? (!!b ? 'true' : 'false')
+    : b
+);
 
 const BooleanFormPart = ({ schema, path, presenter, onSetLinkPath, onClearLinkPath, onUpdate }) => {
   const { title, description } = schema;
   const value = presenter.getIn(path, false);
+  const isLinkable = schema.linkable !== false;
 
   return (
     <div>
-      <StaticOrLinkedValue
+      <MaybeWithLink
+        linkable={isLinkable}
         title={title}
         description={description}
         path={path}
@@ -368,22 +457,37 @@ const BooleanFormPart = ({ schema, path, presenter, onSetLinkPath, onClearLinkPa
         <div>
           <Toggle
             label={title}
-            toggled={!!value}
+            toggled={boolFromFormula(isLinkable, value)}
             onToggle={(_, isChecked) => {
-              onUpdate(path, isChecked);
+              onUpdate(path, boolToFormula(isLinkable, isChecked));
             }}/>
           <p>{description}</p>
         </div>
-      </StaticOrLinkedValue>
+      </MaybeWithLink>
     </div>
   );
 };
 
+const intFromFormula = (isLinkable, formula) => (
+  isLinkable
+    ? parseInt('' + formula, 10)
+    : formula
+);
+
+const intToFormula = (isLinkable, i) => (
+  isLinkable
+    ? '' + i
+    : i
+);
+
 const IntegerFormPart = ({ schema, path, presenter, onSetLinkPath, onClearLinkPath, onUpdate }) => {
   const { title, description } = schema;
   const value = presenter.getIn(path);
+  const isLinkable = schema.linkable !== false;
+
   return (
-    <StaticOrLinkedValue
+    <MaybeWithLink
+      linkable={isLinkable}
       title={title}
       description={description}
       path={path}
@@ -399,11 +503,11 @@ const IntegerFormPart = ({ schema, path, presenter, onSetLinkPath, onClearLinkPa
           min={schema.minimum || 0}
           max={schema.maximum || 1000}
           step={1}
-          value={value || schema.minimum || 0}
+          value={intFromFormula(isLinkable, value)}
           onChange={(_, newVal) => {
-            onUpdate(path, newVal);
+            onUpdate(path, intToFormula(isLinkable, newVal));
           }} />
       </div>
-    </StaticOrLinkedValue>
+    </MaybeWithLink>
   );
 };
