@@ -13,6 +13,7 @@ import SheetLinker from './sheet-linker';
 import StaticOrLinkedValue from './static-or-linked-value';
 import configurersAndSchemasBySchemaURI from 'sheety-core-presenters/dist/configurer';
 import { schemaRegistry } from '../presenter-registry';
+import { encoders, decoders } from '../formula-encoders';
 
 export default ({
   presenterComponent,
@@ -165,6 +166,8 @@ const FormPart = ({ schema, path, presenter, onEditPresenter, onSetLinkPath, onC
             onUpdate={(value) => {
               onUpdate(path, value);
             }}
+            encoders={encoders}
+            decoders={decoders}
             onSetLinkPath={onSetLinkPath}
             onClearLinkPath={onClearLinkPath} />
         </MaybeWithLink>
@@ -339,18 +342,6 @@ const FieldFormPart = ({ schema, path, presenter, onEditPresenter, onSetLinkPath
   }
 };
 
-const stringFromFormula = (isLinkable, formula) => (
-  isLinkable
-    ?  ('' + formula).replace(/^'/, '').replace(/'$/, '')
-    : formula
-);
-
-const stringToFormula = (isLinkable, str) => (
-  isLinkable
-    ? `'${str}'`
-    : str
-);
-
 const StringFormPart = ({ schema, path, presenter, onSetLinkPath, onClearLinkPath, onUpdate }) => {
   const { title, description } = schema;
 
@@ -383,9 +374,9 @@ const StringFormPart = ({ schema, path, presenter, onSetLinkPath, onClearLinkPat
       <TextField
         floatingLabelText={title}
         hintText={description}
-        value={stringFromFormula(isLinkable, value)}
+        value={decoders.string(isLinkable, value)}
         onChange={(evt) => {
-          onUpdate(path, stringToFormula(isLinkable, evt.target.value));
+          onUpdate(path, encoders.string(isLinkable, evt.target.value));
         }} />
     </MaybeWithLink>
   );
@@ -410,9 +401,9 @@ const EnumFormPart = ({ schema, path, presenter, onSetLinkPath, onClearLinkPath,
       <SelectField
         floatingLabelText={title}
         hintText={description}
-        value={stringFromFormula(isLinkable, value)}
+        value={decoders.string(isLinkable, value)}
         onChange={(_, _1, value) => {
-          onUpdate(path, stringToFormula(isLinkable, value));
+          onUpdate(path, encoders.string(isLinkable, value));
         }}>
         {schema.enum.map(enumVal => (
           <MenuItem
@@ -424,18 +415,6 @@ const EnumFormPart = ({ schema, path, presenter, onSetLinkPath, onClearLinkPath,
     </MaybeWithLink>
   );
 };
-
-const boolFromFormula = (isLinkable, formula) => (
-  isLinkable
-    ? ('' + formula).toLowerCase() === 'true'
-    : formula
-);
-
-const boolToFormula = (isLinkable, b) => (
-  isLinkable
-    ? (!!b ? 'true' : 'false')
-    : b
-);
 
 const BooleanFormPart = ({ schema, path, presenter, onSetLinkPath, onClearLinkPath, onUpdate }) => {
   const { title, description } = schema;
@@ -457,9 +436,9 @@ const BooleanFormPart = ({ schema, path, presenter, onSetLinkPath, onClearLinkPa
         <div>
           <Toggle
             label={title}
-            toggled={boolFromFormula(isLinkable, value)}
+            toggled={decoders.bool(isLinkable, value)}
             onToggle={(_, isChecked) => {
-              onUpdate(path, boolToFormula(isLinkable, isChecked));
+              onUpdate(path, encoders.bool(isLinkable, isChecked));
             }}/>
           <p>{description}</p>
         </div>
@@ -467,18 +446,6 @@ const BooleanFormPart = ({ schema, path, presenter, onSetLinkPath, onClearLinkPa
     </div>
   );
 };
-
-const intFromFormula = (isLinkable, formula) => (
-  isLinkable
-    ? parseInt('' + formula, 10)
-    : formula
-);
-
-const intToFormula = (isLinkable, i) => (
-  isLinkable
-    ? '' + i
-    : i
-);
 
 const IntegerFormPart = ({ schema, path, presenter, onSetLinkPath, onClearLinkPath, onUpdate }) => {
   const { title, description } = schema;
@@ -503,9 +470,9 @@ const IntegerFormPart = ({ schema, path, presenter, onSetLinkPath, onClearLinkPa
           min={schema.minimum || 0}
           max={schema.maximum || 1000}
           step={1}
-          value={intFromFormula(isLinkable, value)}
+          value={decoders.int(isLinkable, value)}
           onChange={(_, newVal) => {
-            onUpdate(path, intToFormula(isLinkable, newVal));
+            onUpdate(path, encoders.int(isLinkable, newVal));
           }} />
       </div>
     </MaybeWithLink>
