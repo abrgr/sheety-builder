@@ -21,11 +21,11 @@ class Auth_ extends Component {
     };
   }
 
-  authenticated = (googleAccessToken) => {
+  authenticated = (user, googleAccessToken) => {
     const p = googleAccessToken
             ? updateUserConfig({ googleAccessToken })
             : Promise.resolve();
-    p.then(_ => this.props.dispatch(authActions.receiveAuthStatus(true)));
+    p.then(_ => this.props.dispatch(authActions.setLoggedInUser(user.displayName, user.email, user.photoURL, user.uid)));
   };
 
   isAuthenticated = () => (
@@ -36,7 +36,7 @@ class Auth_ extends Component {
   componentDidMount() {
     ensureHaveAuthState.then(() => {
       if ( this.isAuthenticated() ) {
-        return this.authenticated();
+        return this.authenticated(auth.currentUser);
       }
 
       // not authenticated yet
@@ -58,7 +58,7 @@ class Auth_ extends Component {
           callbacks: {
             signInSuccess: (user, cred, redirectUrl) => {
               if ( cred && cred.providerId === 'google.com' ) {
-                this.authenticated(cred.accessToken)
+                this.authenticated(user, cred.accessToken)
               }
             },
             signInFailure: (err) => {

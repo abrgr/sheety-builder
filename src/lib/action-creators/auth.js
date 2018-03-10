@@ -1,8 +1,11 @@
 import { RECEIVED_AUTH_STATUS } from '../actions';
 
-export function receiveAuthStatus(isSignedIn) {
+export function setLoggedInUser(displayName, email, photoURL, uid) {
   return {
     type: RECEIVED_AUTH_STATUS,
-    isSignedIn
+    displayName,
+    email,
+    photoURL,
+    uid
   };
 }

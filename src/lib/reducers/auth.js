@@ -3,7 +3,11 @@ import * as actions from '../actions';
 
 const initialState = new Record({
   isLoading: true,
-  isSignedIn: false
+  isSignedIn: false,
+  displayName: null,
+  email: null,
+  photoURL: null,
+  uid: null
 })();
 
 export default function auth(state = initialState, action) {
@@ -11,7 +15,11 @@ export default function auth(state = initialState, action) {
     case actions.RECEIVED_AUTH_STATUS:
       return state.merge({
         isLoading: false,
-        isSignedIn: action.isSignedIn
+        isSignedIn: !!action.uid,
+        displayName: action.displayName,
+        email: action.email,
+        photoURL: action.photoURL,
+        uid: action.uid
       });
     default:
       return state;

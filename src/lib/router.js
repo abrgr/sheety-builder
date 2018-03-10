@@ -8,10 +8,19 @@ import BasicInfoEditor from './containers/basic-info-editor';
 import EditorNav from './containers/editor-nav';
 import { editorRoutes } from './routes';
 
+const IfSignedIn = ({ isSignedIn, children }) => (
+  isSignedIn
+    ? children
+    : (
+      <Auth />
+    )
+);
+
 function Router({ isSignedIn }) {
   return (
     <BrowserRouter>
-      <div>
+      <IfSignedIn
+        isSignedIn={isSignedIn}>
         <Route
           path={editorRoutes.tab(':appId', ':page')}
           component={EditorNav} />
@@ -19,12 +28,9 @@ function Router({ isSignedIn }) {
           <Route
             exact
             path="/"
-            component={isSignedIn
-                        ? (
-                          () => (
-                            <Redirect to={editorRoutes.basicTab('my-app')} />
-                          )
-                        ) : Auth} />
+            render={() => (
+              <Redirect to={editorRoutes.basicTab('my-app')} />
+            )} />
           <Route
             exact
             path={editorRoutes.presentationTab(':appId')}
@@ -38,7 +44,7 @@ function Router({ isSignedIn }) {
             path={editorRoutes.logicTab(':appId')}
             component={Importer} />
         </Switch>
-      </div>
+      </IfSignedIn>
     </BrowserRouter>
   );
 }

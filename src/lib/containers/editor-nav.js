@@ -1,28 +1,49 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { withRouter } from 'react-router';
-import FlatButton from 'material-ui/FlatButton';
 import IconButton from 'material-ui/IconButton';
 import AppBar from 'material-ui/AppBar';
 import Drawer from 'material-ui/Drawer';
 import MenuItem from 'material-ui/MenuItem';
+import Avatar from 'material-ui/Avatar';
+import IconMenu from 'material-ui/IconMenu';
 import BackIcon from 'material-ui/svg-icons/navigation/arrow-back';
+import MoreVertIcon from 'material-ui/svg-icons/navigation/more-vert';
 import { white } from 'material-ui/styles/colors';
 import { editorActions } from '../action-creators';
 
 class EditorNav extends Component {
   render() {
-    const { appId, isMainMenuOpen, match } = this.props;
+    const { appId, isMainMenuOpen, match, displayName, email, photoURL } = this.props;
     const page = match && match.params.page;
+
     return (
       <div>
         <AppBar
           title={appId}
           onLeftIconButtonClick={this.onToggleMenu}
           iconElementRight={(
-            <FlatButton
-              label="Save"
-              onClick={this.onSave} />
+            <div>
+              {!!photoURL
+                ? (
+                  <Avatar
+                    src={photoURL} />
+                ): (
+                  <Avatar>
+                    {displayName
+                      ? displayName[0]
+                      : (email ? email[0] : 'U')}
+                  </Avatar>
+                )}
+              <IconMenu
+                iconButtonElement={<IconButton><MoreVertIcon /></IconButton>}>
+                <MenuItem
+                  primaryText="Save"
+                  onClick={this.onSave} />
+                <MenuItem
+                  primaryText="Publish" />
+              </IconMenu>
+            </div>
           )} />
         <Drawer
           open={isMainMenuOpen}>
@@ -88,12 +109,15 @@ class EditorNav extends Component {
 
 export default withRouter(
   connect(
-    ({ editor }) => ({
+    ({ auth, editor }) => ({
       appId: editor.get('appId') || 'Your app',
       isMainMenuOpen: editor.get('isMainMenuOpen'),
       model: editor.get('model'),
       presenter: editor.get('presenter'),
-      spreadsheetId: editor.get('spreadsheetId')
+      spreadsheetId: editor.get('spreadsheetId'),
+      displayName: auth.get('displayName'),
+      email: auth.get('email'),
+      photoURL: auth.get('photoURL') 
     })
   )(EditorNav)
 );
