@@ -1,7 +1,6 @@
 import { Record, Map } from 'immutable';
 import Calculator from 'sheety-calculator';
 import * as actions from '../actions';
-import removeThisMock from '../mock';
 
 const initialState = new Record({
   appId: '',
@@ -11,9 +10,9 @@ const initialState = new Record({
   presentersByType: new Map(),
   isLoading: false,
   spreadsheetId: null,
-  model: removeThisMock, // TODO: null,
+  model: null,
   error: null,
-  calc: new Calculator(removeThisMock) // TODO: null
+  calc: null
 })();
 
 export default function editor(state = initialState, action) {
