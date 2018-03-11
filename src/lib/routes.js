@@ -1,28 +1,32 @@
 const editorRoutes = {
-  root(appId) {
-    return `/${appId}`;
+  root(orgId, projectId, appId) {
+    return `/orgs/${orgId}/projects/${projectId}/apps/${appId}`;
   },
 
-  tab(appId, tab) {
-    return `${this.root(appId)}/${tab}`;
+  tab(orgId, projectId, appId, tab) {
+    return `${this.root(orgId, projectId, appId)}/${tab}`;
   },
 
-  basicTab(appId) {
-    return this.tab(appId, 'basic');
+  basicTab(orgId, projectId, appId) {
+    return this.tab(orgId, projectId, appId, 'basic');
   },
 
-  logicTab(appId) {
-    return this.tab(appId, 'logic');
+  logicTab(orgId, projectId, appId) {
+    return this.tab(orgId, projectId, appId, 'logic');
   },
 
-  presentationTab(appId) {
-    return this.tab(appId, 'presentation');
+  presentationTab(orgId, projectId, appId) {
+    return this.tab(orgId, projectId, appId, 'presentation');
   }
 };
 
 const projectRoutes = {
   list() {
     return '/';
+  },
+
+  project(orgId, id) {
+    return `/orgs/${orgId}/projects/${id}`;
   }
 };
 

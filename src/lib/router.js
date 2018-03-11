@@ -8,6 +8,7 @@ import BasicInfoEditor from './containers/basic-info-editor';
 import EditorNav from './containers/editor-nav';
 import ProjectsNav from './containers/projects-nav';
 import ProjectList from './containers/project-list';
+import Project from './containers/project';
 import { projectRoutes, editorRoutes } from './routes';
 
 const IfSignedIn = ({ isSignedIn, children }) => (
@@ -28,7 +29,7 @@ function Router({ isSignedIn }) {
           **/}
         <Switch>
           <Route
-            path={editorRoutes.tab(':appId', ':page')}
+            path={editorRoutes.tab(':orgId', ':projectId', ':appId', ':page')}
             component={EditorNav} />
           <Route
             path={projectRoutes.list()}
@@ -44,15 +45,19 @@ function Router({ isSignedIn }) {
             component={ProjectList} />
           <Route
             exact
-            path={editorRoutes.presentationTab(':appId')}
+            path={projectRoutes.project(':orgId', ':projectId')}
+            component={Project} />
+          <Route
+            exact
+            path={editorRoutes.presentationTab(':orgId', ':projectId', ':appId')}
             component={PresenterEditor} />
           <Route
             exact
-            path={editorRoutes.basicTab(':appId')}
+            path={editorRoutes.basicTab(':orgId', ':projectId', ':appId')}
             component={BasicInfoEditor} />
           <Route
             exact
-            path={editorRoutes.logicTab(':appId')}
+            path={editorRoutes.logicTab(':orgId', ':projectId', ':appId')}
             component={Importer} />
         </Switch>
       </IfSignedIn>

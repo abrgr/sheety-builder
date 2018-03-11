@@ -12,6 +12,7 @@ import OpenImg from 'material-ui/svg-icons/action/open-in-new';
 import CreateImg from 'material-ui/svg-icons/content/add-circle';
 import { GridList, GridTile } from 'material-ui/GridList';
 import { projectsActions, projectActions } from '../action-creators';
+import { projectRoutes } from '../routes';
 import { Project } from '../models';
 
 class ProjectList extends Component {
@@ -100,7 +101,7 @@ class ProjectList extends Component {
             <div>
               <h2>Invitations</h2>
               <GridList
-                cellHeight={200}>
+                cellHeight={150}>
                 {invitations.map(invitation => (
                   <GridTile
                     key={invitation.get('id')}
@@ -169,8 +170,7 @@ class ProjectList extends Component {
       readers: permissions
     });
 
-    dispatch(projectActions.saveProject(project));
-    // history.push();
+    dispatch(projectActions.saveProject(project, history));
   };
 
   onCloseCreateProjectDialog = () => {
@@ -186,7 +186,13 @@ class ProjectList extends Component {
   };
 
   onOpenProject = (project) => {
-    // TODO
+    const { history } = this.props;
+    history.push(
+      projectRoutes.project(
+        project.get('orgId'),
+        project.get('id')
+      )
+    );
   };
 
   onAcceptInvitation = (invitation) => {

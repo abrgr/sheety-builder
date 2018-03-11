@@ -5,10 +5,11 @@ import {
   RECEIVED_SAVE_PROJECT,
   ERRORED_SAVE_PROJECT
 } from '../actions';
+import { projectRoutes } from '../routes';
 
 const db = firebase.firestore();
 
-export function saveProject(project) {
+export function saveProject(project, history) {
   const orgId = project.get('orgId');
 
   return (dispatch) => {
@@ -30,7 +31,7 @@ export function saveProject(project) {
             const cfgRef = db.doc(`user-config/${uid}`);
             return txn.get(cfgRef)
                .then(cfg => {
-                 const projects = cfg.projects || [];
+                 const projects = cfg.data().projects || [];
                  projects.unshift({
                    id: project.get('id'),
                    orgId
@@ -52,6 +53,14 @@ export function saveProject(project) {
         type: RECEIVED_SAVE_PROJECT,
         project: project
       });
+      if ( history ) {
+        history.push(
+          projectRoutes.project(
+            project.get('orgId'),
+            project.get('id')
+          )
+        );
+      }
     }).catch(err => {
       dispatch({
         type: ERRORED_SAVE_PROJECT,

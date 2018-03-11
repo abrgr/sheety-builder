@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
+import { withRouter } from 'react-router';
 import TextField from 'material-ui/TextField';
 import RaisedButton from 'material-ui/RaisedButton';
 import Paper from 'material-ui/Paper';
@@ -71,8 +72,14 @@ class BasicInfoEditor extends Component {
   }
 
   onNavigateToImport = () => {
-    const { appId, history } = this.props;
-    history.push(editorRoutes.logicTab(appId));
+    const { match, appId, history } = this.props;
+    history.push(
+      editorRoutes.logicTab(
+        match.params.orgId,
+        match.params.projectId,
+        appId
+      )
+    );
   };
 
   onUpdateAppId = (evt) => {
@@ -80,8 +87,10 @@ class BasicInfoEditor extends Component {
   };
 }
 
-export default connect(
-  ({ editor }) => ({
-    appId: editor.get('appId')
-  })
-)(BasicInfoEditor);
+export default withRouter(
+  connect(
+    ({ editor }) => ({
+      appId: editor.get('appId')
+    })
+  )(BasicInfoEditor)
+);
