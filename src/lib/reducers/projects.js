@@ -21,11 +21,11 @@ export default function projects(state = initialState, action) {
       });
     case actions.RECEIVED_SAVE_PROJECT:
       // add any new projects to our list
-      const hasProject = state.projects.some(p => (
+      const prjIdx = state.projects.findIndex(p => (
         p.get('id') === action.project.get('id')
       ));
-      return hasProject
-           ? state
+      return prjIdx >= 0
+           ? state.setIn(['projects', prjIdx], action.project)
            : state.update('projects', p => p.unshift(action.project));
     default:
       return state;
