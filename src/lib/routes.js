@@ -20,6 +20,13 @@ const editorRoutes = {
   }
 };
 
+const projectRoutes = {
+  list() {
+    return '/';
+  }
+};
+
 export {
-  editorRoutes
+  editorRoutes,
+  projectRoutes
 };

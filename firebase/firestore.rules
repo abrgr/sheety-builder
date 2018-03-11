@@ -21,14 +21,17 @@ service cloud.firestore {
         allow read: if request.auth.uid in resource.data.readers // users can read projects of which they are readers
                   || request.auth.uid in resource.data.writers   // users can read projects of which they are writers
                   || request.auth.uid in resource.data.admins;   // users can read projects of which they are admins
-        allow create: if request.auth.uid in
-                    get(/databases/$(database)/documents/orgs/$(orgId)).data.admins // users can create projects in orgs of which they are admins
-                  && request.auth.uid in request.resource.data.admins                        // but they must list themselves as an admin
-                  && request.auth.uid in request.resource.data.writers                       // and a writer
-                  && request.auth.uid in request.resource.data.readers;                      // and a reader
+        allow create: if (
+                      request.auth.uid == orgId                                         // users can create projects in their org
+                      || request.auth.uid in
+                        get(/databases/$(database)/documents/orgs/$(orgId)).data.admins // users can create projects in orgs of which they are admins
+                      )
+                      && request.auth.uid in request.resource.data.admins               // but they must list themselves as an admin
+                      && request.auth.uid in request.resource.data.writers              // and a writer
+                      && request.auth.uid in request.resource.data.readers;             // and a reader
         allow update: if request.auth.uid in resource.data.admins
                     || (
-                      resource.data.admins == request.resource.data.admins                   // writers can update projects but cannot change permissions
+                      resource.data.admins == request.resource.data.admins              // writers can update projects but cannot change permissions
                       && resource.data.writers == request.resource.data.writers
                       && resource.data.readers == request.resource.data.readers
                       && request.auth.uid in resource.data.writers

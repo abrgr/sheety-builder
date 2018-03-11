@@ -1,6 +1,7 @@
 import { Record, Map } from 'immutable';
 import Calculator from 'sheety-calculator';
 import * as actions from '../actions';
+import removeThisMock from '../mock';
 
 const initialState = new Record({
   appId: '',
@@ -8,12 +9,11 @@ const initialState = new Record({
   editingPresenterPath: [],
   linkPath: null,
   presentersByType: new Map(),
-  isMainMenuOpen: false,
   isLoading: false,
   spreadsheetId: null,
-  model: null,
+  model: removeThisMock, // TODO: null,
   error: null,
-  calc: null
+  calc: new Calculator(removeThisMock) // TODO: null
 })();
 
 export default function editor(state = initialState, action) {
@@ -26,8 +26,6 @@ export default function editor(state = initialState, action) {
       return state.set('appId', action.appId);
     case actions.SET_PRESENTERS_BY_TYPE:
       return state.set('presentersByType', action.presentersByType);
-    case actions.TOGGLE_MAIN_EDITOR_MENU:
-      return state.set('isMainMenuOpen', !state.get('isMainMenuOpen'));
     case actions.RECEIVED_SPREADSHEET_ID:
       return state.merge({
         isLoading: true,

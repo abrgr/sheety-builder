@@ -1,12 +1,14 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import { BrowserRouter, Route, Switch, Redirect } from 'react-router-dom';
+import { BrowserRouter, Route, Switch } from 'react-router-dom';
 import Auth from './containers/auth';
 import Importer from './containers/importer';
 import PresenterEditor from './containers/presenter-editor';
 import BasicInfoEditor from './containers/basic-info-editor';
 import EditorNav from './containers/editor-nav';
-import { editorRoutes } from './routes';
+import ProjectsNav from './containers/projects-nav';
+import ProjectList from './containers/project-list';
+import { projectRoutes, editorRoutes } from './routes';
 
 const IfSignedIn = ({ isSignedIn, children }) => (
   isSignedIn
@@ -21,16 +23,25 @@ function Router({ isSignedIn }) {
     <BrowserRouter>
       <IfSignedIn
         isSignedIn={isSignedIn}>
-        <Route
-          path={editorRoutes.tab(':appId', ':page')}
-          component={EditorNav} />
+        {/**
+          * Top navigation elements.  Order matters.
+          **/}
+        <Switch>
+          <Route
+            path={editorRoutes.tab(':appId', ':page')}
+            component={EditorNav} />
+          <Route
+            path={projectRoutes.list()}
+            component={ProjectsNav} />
+        </Switch>
+        {/**
+          * Content elements.  Order should not matter.
+          **/}
         <Switch>
           <Route
             exact
-            path="/"
-            render={() => (
-              <Redirect to={editorRoutes.basicTab('my-app')} />
-            )} />
+            path={projectRoutes.list()}
+            component={ProjectList} />
           <Route
             exact
             path={editorRoutes.presentationTab(':appId')}

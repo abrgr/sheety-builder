@@ -6,7 +6,6 @@ import {
   APP_SAVING_COMPLETED,
   APP_SAVING_FAILED,
   SET_PRESENTERS_BY_TYPE,
-  TOGGLE_MAIN_EDITOR_MENU,
   RECEIVED_SPREADSHEET_ID,
   RECEIVED_MODEL,
   RECEIVED_IMPORT_ERROR,
@@ -64,12 +63,6 @@ export function setPresentersByType(presentersByType) {
   return {
     type: SET_PRESENTERS_BY_TYPE,
     presentersByType
-  };
-}
-
-export function toggleMainMenu() {
-  return {
-    type: TOGGLE_MAIN_EDITOR_MENU
   };
 }
 

@@ -1,98 +1,88 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { withRouter } from 'react-router';
-import IconButton from 'material-ui/IconButton';
-import AppBar from 'material-ui/AppBar';
-import Drawer from 'material-ui/Drawer';
 import MenuItem from 'material-ui/MenuItem';
-import Avatar from 'material-ui/Avatar';
-import IconMenu from 'material-ui/IconMenu';
-import BackIcon from 'material-ui/svg-icons/navigation/arrow-back';
-import MoreVertIcon from 'material-ui/svg-icons/navigation/more-vert';
-import { white } from 'material-ui/styles/colors';
+import HomeIcon from 'material-ui/svg-icons/action/home';
+import BasicIcon from 'material-ui/svg-icons/action/list';
+import PresentationIcon from 'material-ui/svg-icons/action/view-quilt';
+import LogicIcon from 'material-ui/svg-icons/device/developer-mode';
+import PreviewIcon from 'material-ui/svg-icons/navigation/fullscreen';
 import { editorActions } from '../action-creators';
+import Nav from '../components/nav';
 
 class EditorNav extends Component {
   render() {
-    const { appId, isMainMenuOpen, match, displayName, email, photoURL } = this.props;
+    const { appId, match, displayName, email, photoURL } = this.props;
     const page = match && match.params.page;
 
     return (
-      <div>
-        <AppBar
-          title={appId}
-          onLeftIconButtonClick={this.onToggleMenu}
-          iconElementRight={(
-            <div>
-              {!!photoURL
-                ? (
-                  <Avatar
-                    src={photoURL} />
-                ): (
-                  <Avatar>
-                    {displayName
-                      ? displayName[0]
-                      : (email ? email[0] : 'U')}
-                  </Avatar>
-                )}
-              <IconMenu
-                iconButtonElement={<IconButton><MoreVertIcon /></IconButton>}>
-                <MenuItem
-                  primaryText="Save"
-                  onClick={this.onSave} />
-                <MenuItem
-                  primaryText="Publish" />
-              </IconMenu>
-            </div>
-          )} />
-        <Drawer
-          open={isMainMenuOpen}>
-          <AppBar
-            title={appId}
-            onLeftIconButtonClick={this.onToggleMenu}
-            iconElementLeft={(
-              <IconButton>
-                <BackIcon color={white} />
-              </IconButton>
-            )} />
+      <Nav
+        ref={nav => { this.nav = nav; }}
+        title={appId}
+        displayName={displayName}
+        email={email}
+        photoURL={photoURL}
+        rightMenuItems={[
           <MenuItem
+            key="save"
+            primaryText="Save"
+            onClick={this.onSave} />,
+          <MenuItem
+            key="publish"
+            primaryText="Publish" />
+        ]}
+        leftMenuItems={[
+          <MenuItem
+            key="home"
+            insetChildren={true}
+            onClick={() => { this.props.history.push('/'); }}
+            rightIcon={<HomeIcon />}>
+            Home
+          </MenuItem>,
+          <MenuItem
+            key="basic"
             insetChildren={true}
             onClick={this.onNavTo.bind(null, 'basic')}
+            rightIcon={<BasicIcon />}
             checked={page === 'basic'}>
             Basic setup
-          </MenuItem>
+          </MenuItem>,
           <MenuItem
+            key="logic"
             insetChildren={true}
             onClick={this.onNavTo.bind(null, 'logic')}
+            rightIcon={<LogicIcon />}
             checked={page === 'logic'}>
             Logic editor
-          </MenuItem>
+          </MenuItem>,
           <MenuItem
+            key="presentation"
             insetChildren={true}
             onClick={this.onNavTo.bind(null, 'presentation')}
+            rightIcon={<PresentationIcon />}
             checked={page === 'presentation'}>
             Presentation editor
-          </MenuItem>
+          </MenuItem>,
           <MenuItem
+            key="preview"
             insetChildren={true}
             onClick={this.onNavTo.bind(null, 'preview')}
+            rightIcon={<PreviewIcon />}
             checked={page === 'preview'}>
             Full Preview
           </MenuItem>
-        </Drawer>
-      </div>
+        ]} />
     );
   }
 
   onNavTo = (page) => {
     const { history } = this.props;
     history.push(page);
-    this.onToggleMenu();
-  };
 
-  onToggleMenu = () => {
-    const { dispatch } = this.props;
-    dispatch(editorActions.toggleMainMenu());
+    // TODO: this is super ugly
+    if ( this.nav ) {
+      this.nav.onToggleMenu();
+    }
   };
 
   onSave = () => {
@@ -111,7 +101,6 @@ export default withRouter(
   connect(
     ({ auth, editor }) => ({
       appId: editor.get('appId') || 'Your app',
-      isMainMenuOpen: editor.get('isMainMenuOpen'),
       model: editor.get('model'),
       presenter: editor.get('presenter'),
       spreadsheetId: editor.get('spreadsheetId'),
