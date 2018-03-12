@@ -4,10 +4,18 @@ import { withRouter } from 'react-router';
 import MenuItem from 'material-ui/MenuItem';
 import { projectRoutes } from '../routes';
 import Nav from '../components/nav';
+import ArrowDropRight from 'material-ui/svg-icons/navigation-arrow-drop-right';
 
 class ProjectsNav extends Component {
   render() {
-    const { match, displayName, email, photoURL } = this.props;
+    const {
+      match,
+      displayName,
+      email,
+      photoURL,
+      projects,
+      project
+    } = this.props;
     const path = match && match.path;
     const listPath = projectRoutes.list();
 
@@ -22,9 +30,27 @@ class ProjectsNav extends Component {
           <MenuItem
             key="all"
             insetChildren={true}
-            onClick={this.onNavTo.bind(null, listPath)}
-            checked={path === listPath}>
-            All projects
+            rightIcon={<ArrowDropRight />}
+            menuItems={[
+              <MenuItem
+                primaryText="All"
+                insetChildren={true}
+                checked={path === listPath}
+                onClick={this.onNavTo.bind(null, listPath)} />
+            ].concat(
+              projects.map(p => {
+                const projectRoute = projectRoutes.project(p.get('orgId'), p.get('id'));
+                return (
+                  <MenuItem
+                    key={p.get('id')}
+                    primaryText={p.get('name')}
+                    insetChildren={true}
+                    checked={path === projectRoute}
+                    onClick={this.onNavTo.bind(null, projectRoute)} />
+                );
+              }).toJS()
+            )}>
+            Projects
           </MenuItem>
         ]} />
     );
@@ -43,10 +69,12 @@ class ProjectsNav extends Component {
 
 export default withRouter(
   connect(
-    ({ auth }) => ({
+    ({ auth, projects, project }) => ({
       displayName: auth.get('displayName'),
       email: auth.get('email'),
-      photoURL: auth.get('photoURL') 
+      photoURL: auth.get('photoURL'),
+      projects: projects.get('projects'),
+      project: project.get('project')
     })
   )(ProjectsNav)
 );

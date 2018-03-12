@@ -3,9 +3,24 @@ import { connect } from 'react-redux';
 import { withRouter } from 'react-router';
 import { projectActions } from '../action-creators';
 import CircularProgress from 'material-ui/CircularProgress';
-import ImagePlaceholder from 'material-ui/svg-icons/image/photo';
+import CreateImg from 'material-ui/svg-icons/content/add-circle';
+import RaisedButton from 'material-ui/RaisedButton';
+import FlatButton from 'material-ui/FlatButton';
+import IconButton from 'material-ui/IconButton';
+import { GridList, GridTile } from 'material-ui/GridList';
+import { Card, CardActions, CardHeader, CardText } from 'material-ui/Card';
+import ModifiableImg from '../components/modifiable-img';
+import CreateAppDialog from '../components/create-app-dialog';
 
 class Project extends Component {
+  constructor(props) {
+    super(props);
+
+    this.state = {
+      showCreateAppDialog: false
+    };
+  }
+
   componentDidMount() {
     const {
       projects,
@@ -50,38 +65,58 @@ class Project extends Component {
     }
 
     const imageURL = project.get('imageURL');
-    const imageStyle = {
-      width: 200,
-      height: 200
-    };
+    const { showCreateAppDialog } = this.state;
 
     return (
       <div>
-        <h2>{project.get('name')}</h2>
-        <div
-          onClick={this.onRequestPhotoUpload}>
-          <input
-            ref={fileInput => { this.fileInput = fileInput; }}
-            onChange={this.onUploadPhoto}
-            accept="image/*"
-            style={{
-              opacity: 0,
-              position: 'absolute',
-              width: 0,
-              height: 0
-            }}
-            type="file" />
-          {imageURL
-            ? (
+        <CreateAppDialog
+          open={showCreateAppDialog}
+          onRequestClose={this.onCloseCreateAppDialog}
+          onCreate={this.onCreateApp} />
+        <Card>
+          <CardHeader
+            title={project.get('name')}
+            subtitle={project.get('orgName')} />
+          <ModifiableImg
+            src={imageURL}
+            alt={project.get('name')}
+            width={150}
+            height={150}
+            onChange={this.onChangedProjectImage} />
+          <CardText>
+          </CardText>
+          <CardActions>
+            <RaisedButton
+              label="Save"
+              primary={true} />
+            <FlatButton
+              label="Delete project"
+              secondary={true} />
+          </CardActions>
+        </Card>
+        <h2>Apps</h2>
+        <GridList
+          cellHeight={150}>
+          <GridTile
+            title="Create a new app"
+            actionIcon={
+              <IconButton
+                onClick={this.onShowCreateAppDialog}>
+                <CreateImg color="white" />
+              </IconButton>
+            }>
+          </GridTile>
+          {project.apps.map(app => (
+            <GridTile
+              key={app.get('name')}
+              title={app.get('name')}
+              subtitle={app.get('platform')}>
               <img
-                alt={project.get('name')}
-                src={imageURL}
-                style={imageStyle} />
-            ) : (
-              <ImagePlaceholder
-                style={imageStyle} />
-            )}
-        </div>
+                alt={app.get('name')}
+                src={app.get('iconURL')} />
+            </GridTile>
+          ))}
+        </GridList>
       </div>
     );
   }
@@ -92,18 +127,40 @@ class Project extends Component {
     }
   };
 
-  onUploadPhoto = (evt) => {
+  onChangedProjectImage = blob => {
     const { dispatch, project } = this.props;
-    const files = evt.target.files;
+    dispatch(
+      projectActions.setProjectImage(
+        project,
+        blob
+      )
+    );
+  };
 
-    if ( !!files.length ) {
-      dispatch(
-        projectActions.setProjectImage(
-          project,
-          files[0]
-        )
-      );
-    }
+  onCloseCreateAppDialog = () => {
+    this.setState({
+      showCreateAppDialog: false
+    });
+  };
+
+  onShowCreateAppDialog = () => {
+    this.setState({
+      showCreateAppDialog: true
+    });
+  };
+
+  onCreateApp = (app, imgBlob) => {
+    const { dispatch, project } = this.props;
+
+    dispatch(
+      projectActions.saveApp(
+        project,
+        app,
+        imgBlob
+      )
+    );
+
+    this.onCloseCreateAppDialog();
   };
 }
 

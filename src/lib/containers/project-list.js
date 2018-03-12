@@ -85,7 +85,7 @@ class ProjectList extends Component {
           modal={false}
           open={showCreateProjectDialog}
           onRequestClose={this.onCloseCreateProjectDialog}
-          autoScrollBodyContent={true} >
+          autoScrollBodyContent={true}>
           <TextField
             floatingLabelText="Project name"
             value={projectName}
@@ -94,7 +94,6 @@ class ProjectList extends Component {
                 projectName: evt.target.value
               });
             }} />
-            
         </Dialog>
         {invitations && !!invitations.length
           ? (
@@ -171,6 +170,8 @@ class ProjectList extends Component {
     });
 
     dispatch(projectActions.saveProject(project, history));
+
+    this.onCloseCreateProjectDialog();
   };
 
   onCloseCreateProjectDialog = () => {
