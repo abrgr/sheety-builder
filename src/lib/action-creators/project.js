@@ -191,7 +191,10 @@ export function saveApp(project, app, imgBlob) {
           : Promise.resolve(null)
       )).then(doc => {
         const iconURL = doc && doc.downloadURL;
-        const updatedApp = app.set('iconURL', iconURL);
+        const updatedApp = app.merge({
+          id: appId,
+          iconURL
+        });
         return db.runTransaction(txn => {
           const projectRef = db.doc(`orgs/${orgId}/projects/${projectId}`);
           return txn.get(projectRef)

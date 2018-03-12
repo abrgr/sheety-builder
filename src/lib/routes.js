@@ -3,6 +3,10 @@ const editorRoutes = {
     return `/orgs/${orgId}/projects/${projectId}/apps/${appId}`;
   },
 
+  default(orgId, projectId, appId) {
+    return this.basicTab(orgId, projectId, appId);
+  },
+
   tab(orgId, projectId, appId, tab) {
     return `${this.root(orgId, projectId, appId)}/${tab}`;
   },

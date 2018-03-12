@@ -4,6 +4,7 @@ import { withRouter } from 'react-router';
 import { projectActions } from '../action-creators';
 import CircularProgress from 'material-ui/CircularProgress';
 import CreateImg from 'material-ui/svg-icons/content/add-circle';
+import OpenImg from 'material-ui/svg-icons/action/open-in-new';
 import RaisedButton from 'material-ui/RaisedButton';
 import FlatButton from 'material-ui/FlatButton';
 import IconButton from 'material-ui/IconButton';
@@ -12,6 +13,7 @@ import { Card, CardActions, CardHeader, CardText } from 'material-ui/Card';
 import ModifiableImg from '../components/modifiable-img';
 import CreateAppDialog from '../components/create-app-dialog';
 import { App } from '../models';
+import { editorRoutes } from '../routes';
 
 class Project extends Component {
   constructor(props) {
@@ -112,7 +114,13 @@ class Project extends Component {
             <GridTile
               key={app.get('name')}
               title={app.get('name')}
-              subtitle={app.get('platform')}>
+              subtitle={app.get('platform')}
+              actionIcon={
+                <IconButton
+                  onClick={this.onEditApp.bind(null, app)}>
+                  <OpenImg color="white" />
+                </IconButton>
+              }>
               <img
                 alt={app.get('name')}
                 src={app.get('iconURL')} />
@@ -122,12 +130,6 @@ class Project extends Component {
       </div>
     );
   }
-
-  onRequestPhotoUpload = () => {
-    if ( this.fileInput ) {
-      this.fileInput.click();
-    }
-  };
 
   onChangedProjectImage = blob => {
     const { dispatch, project } = this.props;
@@ -163,6 +165,18 @@ class Project extends Component {
     );
 
     this.onCloseCreateAppDialog();
+  };
+
+  onEditApp = app => {
+    const { project, history } = this.props;
+
+    history.push(
+      editorRoutes.default(
+        project.get('orgId'), 
+        project.get('id'),
+        app.get('id')
+      )
+    );
   };
 }
 
