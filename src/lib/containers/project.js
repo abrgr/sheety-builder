@@ -11,6 +11,7 @@ import { GridList, GridTile } from 'material-ui/GridList';
 import { Card, CardActions, CardHeader, CardText } from 'material-ui/Card';
 import ModifiableImg from '../components/modifiable-img';
 import CreateAppDialog from '../components/create-app-dialog';
+import { App } from '../models';
 
 class Project extends Component {
   constructor(props) {
@@ -99,6 +100,7 @@ class Project extends Component {
           cellHeight={150}>
           <GridTile
             title="Create a new app"
+            subtitle={Object.values(App.Platforms).join(', ')}
             actionIcon={
               <IconButton
                 onClick={this.onShowCreateAppDialog}>
