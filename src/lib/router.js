@@ -32,6 +32,9 @@ function Router({ isSignedIn }) {
             path={editorRoutes.tab(':orgId', ':projectId', ':appId', ':page')}
             component={EditorNav} />
           <Route
+            path={projectRoutes.project(':orgId', ':projectId')}
+            component={ProjectsNav} />
+          <Route
             path={projectRoutes.list()}
             component={ProjectsNav} />
         </Switch>

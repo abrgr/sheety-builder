@@ -9,6 +9,7 @@ import ArrowDropRight from 'material-ui/svg-icons/navigation-arrow-drop-right';
 class ProjectsNav extends Component {
   render() {
     const {
+      history,
       match,
       displayName,
       email,
@@ -16,13 +17,15 @@ class ProjectsNav extends Component {
       projects,
       project
     } = this.props;
-    const path = match && match.path;
+    const path = history.location.pathname;
     const listPath = projectRoutes.list();
 
     return (
       <Nav
         ref={nav => { this.nav = nav; }}
-        title="Projects"
+        title={match.params.projectId
+                ? project.get('name')
+                : 'Projects'}
         displayName={displayName}
         email={email}
         photoURL={photoURL}
