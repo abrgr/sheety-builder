@@ -4136,6 +4136,10 @@ jest@20.0.4:
   dependencies:
     jest-cli "^20.0.4"
 
+jiff@^0.7.3:
+  version "0.7.3"
+  resolved "https://registry.yarnpkg.com/jiff/-/jiff-0.7.3.tgz#42db5d9140f1804399bb501747055a9434f40f46"
+
 js-base64@^2.1.9:
   version "2.4.3"
   resolved "https://registry.yarnpkg.com/js-base64/-/js-base64-2.4.3.tgz#2e545ec2b0f2957f41356510205214e98fad6582"

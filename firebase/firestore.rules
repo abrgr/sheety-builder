@@ -38,12 +38,9 @@ service cloud.firestore {
                     );
         // no deletion of projects
 
-        match /publishedVersions/{appId=*}/versions/{version=*} {
-          allow read: if request.auth.uid in get(/databases/$(database)/documents/orgs/$(orgId)/projects/$(projectId)).data.readers; // project reader
-          allow create: if request.auth.uid in get(/databases/$(database)/documents/orgs/$(orgId)/projects/$(projectId)).data.writers; // project writer
-
-          // no deletion of versions
-          // no updates of versions
+        match /apps/{appId=*}/user-versions/{userId=*} {
+          allow read: if request.auth.uid == userId;
+          allow write: if request.auth.uid == userId;
         }
       }
     }

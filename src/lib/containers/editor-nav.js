@@ -12,13 +12,16 @@ import Nav from '../components/nav';
 
 class EditorNav extends Component {
   render() {
-    const { appId, match, displayName, email, photoURL } = this.props;
+    const { app, match, displayName, email, photoURL } = this.props;
     const page = match && match.params.page;
+    const orgPrefix = app.get('orgName')
+                    ? (app.get('orgName') + ' > ')
+                    : '';
 
     return (
       <Nav
         ref={nav => { this.nav = nav; }}
-        title={appId}
+        title={`${orgPrefix}${app.get('name')}`}
         displayName={displayName}
         email={email}
         photoURL={photoURL}
@@ -100,7 +103,7 @@ class EditorNav extends Component {
 export default withRouter(
   connect(
     ({ auth, editor }) => ({
-      appId: editor.get('appId') || 'Your app',
+      app: editor.get('app'),
       model: editor.get('model'),
       presenter: editor.get('presenter'),
       spreadsheetId: editor.get('spreadsheetId'),

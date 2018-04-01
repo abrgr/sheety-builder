@@ -193,7 +193,7 @@ export function saveApp(project, app, imgBlob) {
         const iconURL = doc && doc.downloadURL;
         const updatedApp = app.merge({
           id: appId,
-          iconURL
+          iconURL: iconURL || app.get('iconURL')
         });
         return db.runTransaction(txn => {
           const projectRef = db.doc(`orgs/${orgId}/projects/${projectId}`);

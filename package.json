@@ -12,6 +12,7 @@
     "firebase": "^4.10.0",
     "firebaseui": "^2.6.1",
     "googleapis": "^25.0.0",
+    "jiff": "^0.7.3",
     "material-ui": "^0.20.0",
     "quill-delta-to-html": "^0.5.7",
     "react": "^16.2.0",

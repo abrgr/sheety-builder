@@ -1,7 +1,7 @@
 import {
+  SET_APP,
   SET_EDITING_PRESENTER_PATH,
   SET_PRESENTER_AT_PATH,
-  SET_APP_ID,
   APP_SAVING_INITIATED,
   APP_SAVING_COMPLETED,
   APP_SAVING_FAILED,
@@ -29,13 +29,6 @@ export function updatePresenterAtPath(path, presenter) {
     type: SET_PRESENTER_AT_PATH,
     path,
     presenter
-  };
-}
-
-export function setAppId(appId) {
-  return {
-    type: SET_APP_ID,
-    appId
   };
 }
 
@@ -102,5 +95,12 @@ export function setLinkPath(linkPath) {
 export function clearLinkPath() {
   return {
     type: CLEAR_LINK_PATH
+  };
+}
+
+export function setApp(app) {
+  return {
+    type: SET_APP,
+    app
   };
 }

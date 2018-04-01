@@ -1,9 +1,10 @@
 import { Record, Map } from 'immutable';
 import Calculator from 'sheety-calculator';
 import * as actions from '../actions';
+import { App } from '../models';
 
 const initialState = new Record({
-  appId: '',
+  app: new App(), 
   presenter: new Map(),
   editingPresenterPath: [],
   linkPath: null,
@@ -17,12 +18,12 @@ const initialState = new Record({
 
 export default function editor(state = initialState, action) {
   switch ( action.type ) {
+    case actions.SET_APP:
+      return state.set('app', new App(action.app));
     case actions.SET_PRESENTER_AT_PATH:
       return state.setIn(['presenter'].concat(action.path), action.presenter);
     case actions.SET_EDITING_PRESENTER_PATH:
       return state.set('editingPresenterPath', action.editingPresenterPath);
-    case actions.SET_APP_ID:
-      return state.set('appId', action.appId);
     case actions.SET_PRESENTERS_BY_TYPE:
       return state.set('presentersByType', action.presentersByType);
     case actions.RECEIVED_SPREADSHEET_ID:

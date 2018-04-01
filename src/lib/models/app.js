@@ -13,7 +13,7 @@ const AppRecord = new Record({
   name: '',
   platform: null,
   iconURL: null,
-  currentVersions: new Map()
+  publishedVersions: new Map()
 });
 
 export default class App extends AppRecord {
