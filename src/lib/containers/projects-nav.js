@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import { List } from 'immutable';
 import { connect } from 'react-redux';
 import { withRouter } from 'react-router';
 import MenuItem from 'material-ui/MenuItem';
@@ -41,7 +42,7 @@ class ProjectsNav extends Component {
                 checked={path === listPath}
                 onClick={this.onNavTo.bind(null, listPath)} />
             ].concat(
-              projects.map(p => {
+              (projects || new List()).map(p => {
                 const projectRoute = projectRoutes.project(p.get('orgId'), p.get('id'));
                 return (
                   <MenuItem

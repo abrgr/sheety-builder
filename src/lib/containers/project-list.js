@@ -11,7 +11,7 @@ import CheckImg from 'material-ui/svg-icons/action/check-circle';
 import OpenImg from 'material-ui/svg-icons/action/open-in-new';
 import CreateImg from 'material-ui/svg-icons/content/add-circle';
 import { GridList, GridTile } from 'material-ui/GridList';
-import { projectsActions, projectActions } from '../action-creators';
+import { projectActions } from '../action-creators';
 import { projectRoutes } from '../routes';
 import { Project } from '../models';
 
@@ -23,21 +23,6 @@ class ProjectList extends Component {
       showCreateProjectDialog: false,
       projectName: ''
     };
-  }
-
-  componentDidMount() {
-    const {
-      uid,
-      email,
-      isLoading,
-      projects,
-      invitations,
-      dispatch
-    } = this.props;
-
-    if ( !isLoading && projects.isEmpty() && invitations.isEmpty() ) {
-      dispatch(projectsActions.requestProjects(uid, email));
-    }
   }
 
   render() {
@@ -158,7 +143,7 @@ class ProjectList extends Component {
     const { projectName } = this.state;
 
     const permissions = new Map([
-      [ uid, true ] 
+      [ uid, true ]
     ]);
 
     const project = new Project({

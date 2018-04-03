@@ -24,27 +24,6 @@ class Project extends Component {
     };
   }
 
-  componentDidMount() {
-    const {
-      projects,
-      dispatch,
-      match,
-      project,
-      isLoading,
-      error
-    } = this.props;
-
-    if ( !isLoading && !error && match.params.projectId !== project.get('id') ) {
-      dispatch(
-        projectActions.load(
-          projects,
-          match.params.orgId,
-          match.params.projectId
-        )
-      );
-    }
-  }
-
   render() {
     const {
       project,
@@ -172,7 +151,7 @@ class Project extends Component {
 
     history.push(
       editorRoutes.default(
-        project.get('orgId'), 
+        project.get('orgId'),
         project.get('id'),
         app.get('id')
       )

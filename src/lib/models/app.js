@@ -1,4 +1,5 @@
 import { Record, Map } from 'immutable';
+import coerce from './coerce';
 
 const Platforms = Object.freeze({
   WEB: 'Web',
@@ -16,13 +17,17 @@ const AppRecord = new Record({
   publishedVersions: new Map()
 });
 
+const coercer = coerce.bind(null, new Map({
+  id: id => '' + id,
+  name: name => '' + name,
+  platform: platform => '' + platform,
+  iconURL: iconURL => iconURL ? '' + iconURL : null,
+  publishedVersions: publishedVersions => new Map(publishedVersions)
+}));
+
 export default class App extends AppRecord {
   constructor(props) {
-    const vals = props || {};
-    super({
-      ...vals,
-      currentVersions: new Map(vals.currentVersions)
-    });
+    super(coercer(props));
   }
 }
 

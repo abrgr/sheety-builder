@@ -52,31 +52,6 @@ class BasicInfoEditor extends Component {
     };
   }
 
-  componentDidMount() {
-    const {
-      dispatch,
-      isLoading,
-      error,
-      userAppVersions,
-      project,
-      match,
-      app
-    } = this.props;
-
-    const needLoad = !userAppVersions || match.params.appId !== app.get('id');
-    if ( !isLoading && !error && needLoad ) {
-      dispatch(
-        userAppVersionsActions.loadUserAppVersions(
-          match.params.orgId,
-          match.params.projectId,
-          match.params.appId,
-          project,
-          app
-        )
-      );
-    }
-  }
-
   render() {
     const { app, error, isLoading, userAppVersions } = this.props;
     const {

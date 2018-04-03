@@ -2,6 +2,7 @@ import { Record, Map } from 'immutable';
 import coerce from './coerce';
 
 const AppVersionRecord = new Record({
+  appId: null,
   name: null,
   description: null,
   base: null,
@@ -10,6 +11,7 @@ const AppVersionRecord = new Record({
 });
 
 const coercer = coerce.bind(null, new Map({
+  appId: (appId) => appId ? '' + appId : null,
   name: (name) => name ? '' + name : null,
   description: (description) => description ? '' + description : null,
   base: (base) => base ? new AppVersion(base) : null,

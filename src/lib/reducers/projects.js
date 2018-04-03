@@ -4,8 +4,8 @@ import * as actions from '../actions';
 const initialState = new Record({
   isLoading: false,
   error: null,
-  projects: new List(),
-  invitations: new List()
+  projects: null,
+  invitations: null
 })();
 
 export default function projects(state = initialState, action) {
@@ -21,12 +21,15 @@ export default function projects(state = initialState, action) {
       });
     case actions.RECEIVED_SAVE_PROJECT:
       // add any new projects to our list
-      const prjIdx = state.projects.findIndex(p => (
+      const projects = state.projects || new List();
+      const prjIdx = projects.findIndex(p => (
         p.get('id') === action.project.get('id')
       ));
       return prjIdx >= 0
            ? state.setIn(['projects', prjIdx], action.project)
-           : state.update('projects', p => p.unshift(action.project));
+           : state.update('projects', p => (
+               p ? p.unshift(action.project) : List.of(action.project)
+             ));
     default:
       return state;
   }

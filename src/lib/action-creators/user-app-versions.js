@@ -55,6 +55,7 @@ export function create(orgId, projectId, appId, versionName, description, baseVe
              const newVersions = existingVersions.set(
                versionName,
                new AppVersion({
+                 appId,
                  name: versionName,
                  description: description,
                  base: baseVersion
