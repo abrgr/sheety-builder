@@ -20,6 +20,11 @@ export default function editor(state = initialState, action) {
   switch ( action.type ) {
     case actions.SET_APP:
       return state.set('app', new App(action.app));
+    case actions.RECEIVED_SAVE_PROJECT:
+      const newApp = action.project.get('apps').find(app => app.get('id') === state.app.get('id'));
+      return newApp
+           ? state.set('app', newApp)
+           : state;
     case actions.SET_PRESENTER_AT_PATH:
       return state.setIn(['presenter'].concat(action.path), action.presenter);
     case actions.SET_EDITING_PRESENTER_PATH:
