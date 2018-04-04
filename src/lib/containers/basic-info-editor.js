@@ -136,7 +136,7 @@ class BasicInfoEditor extends Component {
           <TextField
             floatingLabelText="App Name"
             value={app.get('name')}
-            onChange={this.onUpdateAppId} />
+            onChange={this.onUpdateAppName} />
           {!!error
             ? (
               <Paper>
@@ -181,7 +181,7 @@ class BasicInfoEditor extends Component {
     });
   };
 
-  onUpdateAppId = evt => {
+  onUpdateAppName = evt => {
     const {
       dispatch,
       app,
