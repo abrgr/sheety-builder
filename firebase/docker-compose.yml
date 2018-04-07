@@ -12,3 +12,10 @@ services:
      - ".config:/root/.config"
     command: "firebase"
     network_mode: "bridge"
+  gsutil:
+    image: google/cloud-sdk:alpine
+    volumes:
+     - ".:/app"
+     - ".config:/root/.config"
+    working_dir: "/app"
+    command: "gsutil"

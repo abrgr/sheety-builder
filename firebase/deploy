@@ -1,0 +1,4 @@
+#!/bin/bash -e
+
+docker-compose run --rm gsutil gsutil cors set storage-cors.json gs://sheety-builder.appspot.com
+docker-compose run --rm firebase-cli firebase deploy
