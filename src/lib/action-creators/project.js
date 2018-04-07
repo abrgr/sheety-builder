@@ -7,7 +7,7 @@ import {
   RECEIVED_LOAD_PROJECT,
   ERRORED_LOAD_PROJECT
 } from '../actions';
-import { projectRoutes } from '../routes';
+import { projectRoutes, appRoutes } from '../routes';
 import * as persistence from '../persistence';
 
 export function saveProject(project, history) {
@@ -90,17 +90,23 @@ export function setProjectImage(project, blob) {
   };
 }
 
-export function saveApp(project, app, imgBlob) {
+export function saveApp(project, app, imgBlob, history) {
   return dispatch => {
     dispatch({
       type: REQUESTED_SAVE_PROJECT
     });
 
-    persistence.project.saveApp(app).then(project => {
+    persistence.project.saveApp(project, app, imgBlob).then(({ project, app }) => {
       dispatch({
         type: RECEIVED_SAVE_PROJECT,
         project
       });
+
+      if ( history ) {
+        history.push(
+          appRoutes.default(project.get('orgId'), project.get('id'), app.get('id'))
+        );
+      }
     }).catch(err => {
       dispatch({
         type: ERRORED_SAVE_PROJECT,

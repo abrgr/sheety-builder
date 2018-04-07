@@ -18,9 +18,9 @@ const AppRecord = new Record({
 });
 
 const coercer = coerce.bind(null, new Map({
-  id: id => '' + id,
-  name: name => '' + name,
-  platform: platform => '' + platform,
+  id: id => !!id ? '' + id : null,
+  name: name => !!name ? '' + name : null,
+  platform: platform => !!platform ? '' + platform : null,
   iconURL: iconURL => iconURL ? '' + iconURL : null,
   publishedVersions: publishedVersions => new Map(publishedVersions)
 }));

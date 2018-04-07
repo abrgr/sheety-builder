@@ -10,7 +10,7 @@ import EditorNav from './containers/editor-nav';
 import ProjectsNav from './containers/projects-nav';
 import ProjectList from './containers/project-list';
 import Project from './containers/project';
-import { projectRoutes, editorRoutes } from './routes';
+import { projectRoutes, appRoutes, editorRoutes } from './routes';
 import { projectsActions, projectActions, userAppVersionsActions, editorActions } from './action-creators';
 
 const IfSignedIn = ({ isSignedIn, children }) => (
@@ -135,9 +135,9 @@ const AppLoader = withRouter(
   ))
 );
 
-const EditorLoader = withRouter(
+const AppVersionLoader = withRouter(
   connect(
-    ({ project, editor, userAppVersions }) => ({
+    ({ userAppVersions }) => ({
       isLoading: userAppVersions.get('isLoading'),
       error: userAppVersions.get('error'),
       userAppVersions: userAppVersions.get('userAppVersions')
@@ -166,6 +166,33 @@ const EditorLoader = withRouter(
   ))
 );
 
+const EditorLoader = withRouter(
+  connect(
+    ({ editor, userAppVersions }) => ({
+      userAppVersions: userAppVersions.get('userAppVersions'),
+      appVersion: editor.get('appVersion')
+    })
+  )(props => (
+    <Loader
+      {...props}
+      requiresLoad={({
+        appVersion,
+        match
+      }) => (
+        match.params.appId !== appVersion.get('appId') || match.params.versionId !== appVersion.get('name')
+      )}
+      requiresReload={({ match, uid, email }, { match: prevMatch, uid: prevUid, email: prevEmail }) => (
+        match.params.appId !== prevMatch.params.appId || match.params.versionId !== prevMatch.params.versionId
+          || uid !== prevUid || email !== prevEmail
+      )}
+      getLoadAction={({ match, userAppVersions }) => (
+        editorActions.setAppVersion(
+          userAppVersions.get(match.params.versionId)
+        )
+      )} />
+  ))
+);
+
 function Router({ isSignedIn }) {
   return (
     <BrowserRouter>
@@ -183,10 +210,16 @@ function Router({ isSignedIn }) {
                 render={props => (
                   <ProjectLoader {...props}>
                     <Route
-                      path={editorRoutes.tab(':orgId', ':projectId', ':appId', ':page')}
+                      path={appRoutes.root(':orgId', ':projectId', ':appId')}
                       render={props => (
                         <AppLoader {...props}>
-                          <EditorLoader {...props} />
+                          <AppVersionLoader {...props}>
+                            <Route
+                              path={editorRoutes.tab(':orgId', ':projectId', ':appId', ':versionId')}
+                              render={props => (
+                                <EditorLoader {...props} />
+                              )} />
+                          </AppVersionLoader>
                         </AppLoader>
                       )} />
                   </ProjectLoader>
@@ -199,7 +232,7 @@ function Router({ isSignedIn }) {
           **/}
         <Switch>
           <Route
-            path={editorRoutes.tab(':orgId', ':projectId', ':appId', ':page')}
+            path={editorRoutes.tab(':orgId', ':projectId', ':appId', ':versionId', ':page')}
             component={EditorNav} />
           <Route
             path={projectRoutes.project(':orgId', ':projectId')}
@@ -222,15 +255,15 @@ function Router({ isSignedIn }) {
             component={Project} />
           <Route
             exact
-            path={editorRoutes.presentationTab(':orgId', ':projectId', ':appId')}
-            component={PresenterEditor} />
-          <Route
-            exact
-            path={editorRoutes.basicTab(':orgId', ':projectId', ':appId')}
+            path={appRoutes.default(':orgId', ':projectId', ':appId')}
             component={BasicInfoEditor} />
           <Route
             exact
-            path={editorRoutes.logicTab(':orgId', ':projectId', ':appId')}
+            path={editorRoutes.presentationTab(':orgId', ':projectId', ':versionId', ':appId')}
+            component={PresenterEditor} />
+          <Route
+            exact
+            path={editorRoutes.logicTab(':orgId', ':projectId', ':versionId', ':appId')}
             component={Importer} />
         </Switch>
       </IfSignedIn>

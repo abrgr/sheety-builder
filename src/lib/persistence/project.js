@@ -86,7 +86,10 @@ export default getUid => ({
                }
              );
 
-             return new Project(existingProject);
+             return {
+               project: new Project(existingProject),
+               app: updatedApp
+             };
            })
       });
     });

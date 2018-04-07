@@ -13,8 +13,8 @@ export function requestProjects(uid, email) {
     });
 
     Promise.all([
-      project.list(),
-      project.listInvites()
+      project.list(uid),
+      project.listInvites(email, uid)
     ]).then(([projects, invitations]) => {
       dispatch({
         type: RECEIVED_PROJECTS,

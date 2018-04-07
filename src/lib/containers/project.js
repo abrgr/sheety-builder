@@ -13,7 +13,7 @@ import { Card, CardActions, CardHeader, CardText } from 'material-ui/Card';
 import ModifiableImg from '../components/modifiable-img';
 import CreateAppDialog from '../components/create-app-dialog';
 import { App } from '../models';
-import { editorRoutes } from '../routes';
+import { appRoutes } from '../routes';
 
 class Project extends Component {
   constructor(props) {
@@ -58,7 +58,7 @@ class Project extends Component {
         <Card>
           <CardHeader
             title={project.get('name')}
-            subtitle={project.get('orgName')} />
+            subtitle={project.get('orgName') || ''} />
           <ModifiableImg
             src={imageURL}
             alt={project.get('name')}
@@ -133,13 +133,14 @@ class Project extends Component {
   };
 
   onCreateApp = (app, imgBlob) => {
-    const { dispatch, project } = this.props;
+    const { dispatch, project, history } = this.props;
 
     dispatch(
       projectActions.saveApp(
         project,
         app,
-        imgBlob
+        imgBlob,
+        history
       )
     );
 
@@ -150,7 +151,7 @@ class Project extends Component {
     const { project, history } = this.props;
 
     history.push(
-      editorRoutes.default(
+      appRoutes.default(
         project.get('orgId'),
         project.get('id'),
         app.get('id')

@@ -7,12 +7,14 @@ import Dialog from 'material-ui/Dialog';
 import Paper from 'material-ui/Paper';
 import { GridList, GridTile } from 'material-ui/GridList';
 import CircularProgress from 'material-ui/CircularProgress';
+import IconButton from 'material-ui/IconButton';
 import CreateImg from 'material-ui/svg-icons/content/add-circle';
+import OpenImg from 'material-ui/svg-icons/action/open-in-new';
 import { lightBlue400 } from 'material-ui/styles/colors';
 import { userAppVersionsActions, projectActions } from '../action-creators';
 import { editorRoutes } from '../routes';
 
-const InProgressItems = ({ userAppVersions }) => {
+const InProgressItems = ({ userAppVersions, onEditVersion }) => {
   if ( !userAppVersions || userAppVersions.isEmpty() ) {
     return null;
   }
@@ -20,20 +22,24 @@ const InProgressItems = ({ userAppVersions }) => {
   return (
     <div>
       <h2>In-progress Work</h2>
-      <div>
+      <GridList
+        style={{
+          display: 'flex',
+          flexWrap: 'nowrap',
+          overflowX: 'auto'
+        }}>
         {userAppVersions.entrySeq().map(([name, appVersion]) => (
-          <div
+          <GridTile
             key={name}
-            style={{
-              display: 'inline-block',
-              marginRight: 20
-            }}>
-            <Paper>
-              {name} ({appVersion.get('baseName') ? `Based on ${appVersion.get('baseName')}` : 'From scratch'})
-            </Paper>
-          </div>
+            actionIcon={
+              <IconButton
+                onClick={onEditVersion.bind(null, name)}>
+                <OpenImg color="white" />
+              </IconButton>
+            }
+            title={`${name} (${appVersion.get('baseName') ? `Based on ${appVersion.get('baseName')}` : 'From scratch'})`} />
         ))}
-      </div>
+      </GridList>
     </div>
   );
 };
@@ -149,6 +155,7 @@ class BasicInfoEditor extends Component {
                 mode='indeterminate' />
             ) : null}
           <InProgressItems
+            onEditVersion={this.onEditVersion}
             userAppVersions={userAppVersions} />
           <Paper>
             <FlatButton
@@ -225,6 +232,14 @@ class BasicInfoEditor extends Component {
     );
 
     this.onCloseNewVersionDialog();
+  };
+
+  onEditVersion = appVersionId => {
+    const { history, match } = this.props;
+
+    history.push(
+      editorRoutes.default(match.params.orgId, match.params.projectId, match.params.appId, appVersionId)
+    );
   };
 }
 

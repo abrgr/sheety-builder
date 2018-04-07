@@ -15,10 +15,10 @@ const ProjectRecord = new Record({
 });
 
 const coercer = coerce.bind(null, new Map({
-  id: id => '' + id,
-  orgId: orgId => '' + orgId,
-  orgName: orgName => '' + orgName,
-  name: name => '' + name,
+  id: id => !!id ? '' + id : null,
+  orgId: orgId => !!orgId ? '' + orgId : null,
+  orgName: orgName => !!orgName ? '' + orgName : null,
+  name: name => !!name ? '' + name : null,
   admins: admins => new Map(admins),
   writers: writers => new Map(writers),
   readers: readers => new Map(readers),

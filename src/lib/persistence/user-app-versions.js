@@ -3,6 +3,7 @@ import firebase from '../firebase';
 import { AppVersion } from '../models';
 
 const db = firebase.firestore();
+const storage = firebase.storage();
 
 export default getUid => ({
   list(orgId, projectId, appId) {
@@ -26,6 +27,8 @@ export default getUid => ({
           const newVersions = existingVersions.set(
             versionName,
             new AppVersion({
+              orgId,
+              projectId,
               appId,
               name: versionName,
               description: description,
@@ -42,5 +45,44 @@ export default getUid => ({
         });
       })
     ));
-  }
+  },
+
+  getUserPresenterByHash(orgId, projectId, presenterHash) {
+    return getPresenterByHash(getUid, true, `orgs/${orgId}/projects/${projectId}/user-assets/`, presenterHash);
+  },
+
+  getPublicPresenterByHash(orgId, projectId, presenterHash) {
+    return getPresenterByHash(getUid, false, `orgs/${orgId}/projects/${projectId}/shared-assets/`, presenterHash);
+  },
+
+  getUserModelByHash(orgId, projectId, modelHash) {
+    return getModelByHash(getUid, true, `orgs/${orgId}/projects/${projectId}/user-assets/`, modelHash);
+  },
+
+  getPublicModelByHash(orgId, projectId, modelHash) {
+    return getModelByHash(getUid, false, `orgs/${orgId}/projects/${projectId}/shared-assets/`, modelHash);
+  },
 })
+
+function getPresenterByHash(getUid, appendUid, pathPrefix, presenterHash) {
+  return getAssetByHash(getUid, appendUid, 'presenter', pathPrefix, presenterHash);
+}
+
+function getModelByHash(getUid, appendUid, pathPrefix, modelHash) {
+  return getAssetByHash(getUid, appendUid, 'model', pathPrefix, modelHash);
+}
+
+function getAssetByHash(getUid, appendUid, assetType, pathPrefix, assetHash) {
+  return getUid().then(uid => (
+    storage.ref()
+           .child(`${pathPrefix}${appendUid ? '/' + uid : ''}/${assetType}-${assetHash}`)
+           .getDownloadURL()
+  )).then(fetch)
+    .then(resp => {
+      if ( !resp.ok ) {
+        throw new Error('Could not find presenter');
+      }
+
+      return resp.json();
+  }).then(fromJS);
+}

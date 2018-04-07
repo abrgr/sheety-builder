@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Map } from 'immutable';
+import { List, Map } from 'immutable';
 import { connect } from 'react-redux';
 import { withRouter } from 'react-router';
 import CircularProgress from 'material-ui/CircularProgress';
@@ -104,36 +104,36 @@ class ProjectList extends Component {
               </GridList>
             </div>
           ) : null}
-          <div>
-            <h2>Projects</h2>
-            <GridList
-              cellHeight={200}>
+        <div>
+          <h2>Projects</h2>
+          <GridList
+            cellHeight={200}>
+            <GridTile
+              title="Create a new project"
+              actionIcon={
+                <IconButton
+                  onClick={this.onShowCreateProjectDialog}>
+                  <CreateImg color="white" />
+                </IconButton>
+              }>
+            </GridTile>
+            {(projects || new List()).map(project => (
               <GridTile
-                title="Create a new project"
+                key={project.get('id')}
+                title={project.get('name')}
                 actionIcon={
                   <IconButton
-                    onClick={this.onShowCreateProjectDialog}>
-                    <CreateImg color="white" />
+                    onClick={this.onOpenProject.bind(null, project)}>
+                    <OpenImg color="white" />
                   </IconButton>
                 }>
+                <img
+                  alt={project.get('name')}
+                  src={project.get('imageURL')} />
               </GridTile>
-              {projects.map(project => (
-                <GridTile
-                  key={project.get('id')}
-                  title={project.get('name')}
-                  actionIcon={
-                    <IconButton
-                      onClick={this.onOpenProject.bind(null, project)}>
-                      <OpenImg color="white" />
-                    </IconButton>
-                  }>
-                  <img
-                    alt={project.get('name')}
-                    src={project.get('imageURL')} />
-                </GridTile>
-              ))}
-            </GridList>
-          </div>
+            ))}
+          </GridList>
+        </div>
       </div>
     );
   }
