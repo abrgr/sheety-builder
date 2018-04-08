@@ -4,6 +4,7 @@ import * as actions from '../actions';
 const initialState = new Record({
   isLoading: false,
   error: null,
+  appId: null,
   userAppVersions: null
 })();
 
@@ -20,7 +21,10 @@ export default function userAppVersions(state = initialState, action) {
         error: action.error
       });
     case actions.RECEIVED_LOAD_USER_APP_VERSIONS:
-      return initialState.set('userAppVersions', action.userAppVersions);
+      return initialState.merge({
+        appId: action.appId,
+        userAppVersions: action.userAppVersions
+      });
     default:
       return state;
   }

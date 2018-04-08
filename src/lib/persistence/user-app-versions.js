@@ -17,72 +17,147 @@ export default getUid => ({
   },
 
   create(orgId, projectId, appId, versionName, description, baseVersion) {
-    return getUid().then(uid => (
-      db.runTransaction(txn => {
-        const versionRef = db.doc(`orgs/${orgId}/projects/${projectId}/apps/${appId}/user-versions/${uid}`);
-        return txn.get(versionRef).then(doc => {
-          const existingVersions = doc.exists
-                                 ? fromJS(doc.data()).map(v => new AppVersion(v))
-                                 : new Map();
-          const newVersions = existingVersions.set(
-            versionName,
-            new AppVersion({
-              orgId,
-              projectId,
-              appId,
-              name: versionName,
-              description: description,
-              base: baseVersion
-            })
-          );
+    const appVersion = new AppVersion({
+      orgId,
+      projectId,
+      appId,
+      name: versionName,
+      description: description,
+      base: baseVersion
+    });
 
-          txn.set(
-            versionRef,
-            newVersions.toJS()
-          );
-
-          return newVersions;
-        });
-      })
-    ));
+    return saveAppVersionToFirebase(
+      getUid,
+      orgId,
+      projectId,
+      appId,
+      appVersion
+    );
   },
 
   getUserPresenterByHash(orgId, projectId, presenterHash) {
-    return getPresenterByHash(getUid, true, `orgs/${orgId}/projects/${projectId}/user-assets/`, presenterHash);
+    return getUid().then(uid => (
+      getPresenterByHash(getUserAssetPathPrefix(orgId, projectId, uid), presenterHash)
+    ));
   },
 
   getPublicPresenterByHash(orgId, projectId, presenterHash) {
-    return getPresenterByHash(getUid, false, `orgs/${orgId}/projects/${projectId}/shared-assets/`, presenterHash);
+    return getUid().then(uid => (
+      getPresenterByHash(getSharedAssetPathPrefix(orgId, projectId), presenterHash)
+    ));
   },
 
   getUserModelByHash(orgId, projectId, modelHash) {
-    return getModelByHash(getUid, true, `orgs/${orgId}/projects/${projectId}/user-assets/`, modelHash);
+    return getUid().then(uid => (
+      getModelByHash(getUserAssetPathPrefix(orgId, projectId, uid), modelHash)
+    ));
   },
 
   getPublicModelByHash(orgId, projectId, modelHash) {
-    return getModelByHash(getUid, false, `orgs/${orgId}/projects/${projectId}/shared-assets/`, modelHash);
+    return getUid().then(uid => (
+      getModelByHash(getSharedAssetPathPrefix(orgId, projectId), modelHash)
+    ));
   },
+
+  saveAppVersion(appVersion, modelId, model, presenter) {
+    const orgId = appVersion.get('orgId');
+    const projectId = appVersion.get('projectId');
+    const appId = appVersion.get('appId');
+    const modelJSON = JSON.stringify(model.toJS());
+    const presenterJSON = JSON.stringify(presenter.toJS());
+    const updatedAppVersion = appVersion.set('base', appVersion)
+                                        .setModelJSON(modelId, modelJSON)
+                                        .setPresenterJSON(presenterJSON);
+
+    return getUid().then(uid => {
+      const userAssetPrefix = getUserAssetPathPrefix(orgId, projectId, uid);
+      const modelPath = getModelPath(userAssetPrefix, updatedAppVersion.getIn(['modelHashesById', modelId]));
+      const presenterPath = getPresenterPath(userAssetPrefix, updatedAppVersion.get('presenterHash'));
+
+      return Promise.all([
+        putAsset(modelPath, modelJSON),
+        putAsset(presenterPath, presenterJSON)
+      ]).then(() => {
+        saveAppVersionToFirebase(getUid, orgId, projectId, appId, updatedAppVersion, uid)
+      })
+    });
+  }
 })
 
-function getPresenterByHash(getUid, appendUid, pathPrefix, presenterHash) {
-  return getAssetByHash(getUid, appendUid, 'presenter', pathPrefix, presenterHash);
+function getProjectPathPrefix(orgId, projectId) {
+  return `orgs/${orgId}/projects/${projectId}`;
 }
 
-function getModelByHash(getUid, appendUid, pathPrefix, modelHash) {
-  return getAssetByHash(getUid, appendUid, 'model', pathPrefix, modelHash);
+function getUserAssetPathPrefix(orgId, projectId, uid) {
+  return `${getProjectPathPrefix(orgId, projectId)}/user-assets/${uid}`;
 }
 
-function getAssetByHash(getUid, appendUid, assetType, pathPrefix, assetHash) {
-  return getUid().then(uid => (
-    storage.ref()
-           .child(`${pathPrefix}${appendUid ? '/' + uid : ''}/${assetType}-${assetHash}`)
-           .getDownloadURL()
-  )).then(fetch)
-    .then(resp => {
-      if ( !resp.ok ) {
-        throw new Error('Could not find presenter');
-      }
+function getSharedAssetPathPrefix(orgId, projectId) {
+  return `${getProjectPathPrefix(orgId, projectId)}/shared-assets`;
+}
 
-      return resp.json();
-  }).then(fromJS);
+function getModelPath(pathPrefix, modelHash) {
+  return `${pathPrefix}/model-${modelHash}`;
+}
+
+function getPresenterPath(pathPrefix, presenterHash) {
+  return `${pathPrefix}/presenter-${presenterHash}`;
+}
+
+function getPresenterByHash(pathPrefix, presenterHash) {
+  return getAsset(getPresenterPath(pathPrefix, presenterHash));
+}
+
+function getModelByHash(pathPrefix, modelHash) {
+  return getAsset(getModelPath(pathPrefix, modelHash));
+}
+
+function getAsset(path) {
+  return storage.ref()
+         .child(path)
+         .getDownloadURL()
+         .then(fetch)
+         .then(resp => {
+           if ( !resp.ok ) {
+             throw new Error('Could not find presenter');
+           }
+
+           return resp.json();
+         }).then(fromJS);
+}
+
+function putAsset(path, json) {
+  return storage.ref()
+         .child(path)
+         .putString(json, 'raw', { contentType: 'application/json' });
+}
+
+function saveAppVersionToFirebase(getUid, orgId, projectId, appId, appVersion, uid) {
+  return getUid(uid).then(uid => (
+    db.runTransaction(txn => {
+      const versionRef = db.doc(`orgs/${orgId}/projects/${projectId}/apps/${appId}/user-versions/${uid}`);
+      return txn.get(versionRef).then(doc => {
+        const existingVersions = doc.exists
+                               ? fromJS(doc.data()).map(v => new AppVersion(v))
+                               : new Map();
+        const versionName = appVersion.get('name');
+
+        if ( !appVersion.isLegitimateChildOf(existingVersions.get(versionName)) ) {
+          return Promise.reject('Inconsistent');
+        }
+
+        const newVersions = existingVersions.set(
+          versionName,
+          appVersion
+        );
+
+        txn.set(
+          versionRef,
+          newVersions.toJS()
+        );
+
+        return newVersions;
+      });
+    })
+  ));
 }

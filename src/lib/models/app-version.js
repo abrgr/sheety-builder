@@ -29,12 +29,12 @@ export default class AppVersion extends AppVersionRecord {
     super(coercer(props || {}));
   }
 
-  setModel(id, model) {
-    return this.setIn(['modelHashesById', id], hash(model));
+  setModelJSON(id, modelJSON) {
+    return this.setIn(['modelHashesById', id], hash(modelJSON));
   }
 
-  setPresenter(presenter) {
-    return this.set('presenterHash', hash(presenter));
+  setPresenterJSON(presenterJSON) {
+    return this.set('presenterHash', hash(presenterJSON));
   }
 
   isFromScratch() {
@@ -48,10 +48,22 @@ export default class AppVersion extends AppVersionRecord {
 
     return hasModelChanges || hasPresenterChanges;
   }
+
+  isLegitimateChildOf(possibleProgenitor) {
+    const base = this.get('base');
+    if ( !possibleProgenitor && !base ) {
+      return true;
+    }
+    if ( !base ) {
+      return false;
+    }
+
+    const possibleProgenitorVersion = new AppVersion(possibleProgenitor);
+    return base.equals(possibleProgenitorVersion);
+  }
 }
 
-function hash(immutableModel) {
-  const data = JSON.stringify(immutableModel.toJS());
+function hash(data) {
   const hashAlgo = 'sha256';
   const hasher = crypto.createHash(hashAlgo);
   hasher.update(data);

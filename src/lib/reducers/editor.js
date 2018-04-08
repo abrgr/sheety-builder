@@ -24,11 +24,13 @@ export default function editor(state = initialState, action) {
     case actions.REQUESTED_APP_VERSION:
       return state.set('isLoading', true);
     case actions.RECEIVED_APP_VERSION:
+      const model = action.models.first(); // TODO: support multiple models in the future
       return state.merge({
         appVersion: new AppVersion(action.appVersion),
         isLoading: false,
-        model: action.models.first(), // TODO: support multiple models in the future
-        presenter: action.presenter
+        model,
+        presenter: action.presenter,
+        calc: new Calculator(model)
       });
     case actions.ERRORED_APP_VERSION:
       return state.merge({

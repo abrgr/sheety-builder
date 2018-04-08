@@ -47,7 +47,7 @@ export function setAppVersion(appVersion) {
       dispatch({
         type: RECEIVED_APP_VERSION,
         appVersion,
-        models,
+        models: new List(models),
         presenter
       })
     }).catch(error => {
@@ -80,14 +80,14 @@ function loadModels(appVersion) {
     return Promise.all(
       userModels.valueSeq().map(
         persistence.userAppVersions.getUserModelByHash.bind(null, orgId, projectId)
-      ).toJS()
+      )
     );
   }
 
   return Promise.all(
     appVersion.getIn(['base', 'modelHashesById']).valueSeq().map(
       persistence.userAppVersions.getPublicModelByHash.bind(null, orgId, projectId)
-    ).toJS()
+    )
   );
 }
 
@@ -106,13 +106,13 @@ export function updatePresenterAtPath(path, presenter) {
   };
 }
 
-export function save(appId, spreadsheetId, model, presenter) {
+export function save(appVersion, spreadsheetId, model, presenter) {
   return dispatch => {
     dispatch({
       type: APP_SAVING_INITIATED
     });
 
-    persistence.saveApp(appId, spreadsheetId, model, presenter)
+    persistence.userAppVersions.saveAppVersion(appVersion, spreadsheetId, model, presenter)
       .then(() => {
         dispatch({
           type: APP_SAVING_COMPLETED

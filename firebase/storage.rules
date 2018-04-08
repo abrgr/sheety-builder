@@ -10,21 +10,12 @@ service firebase.storage {
           allow write: if request.auth.uid == userId                       // keep it namespaced
                       && resource == null                                  // append-only
                       && request.resource.size < 5 * 1024 * 1024           // < 5mb
-                      && request.resource.contentType.matches('image/.*'); // and images only for now
+                      && (request.resource.contentType.matches('image/.*') // only images or json
+                        || request.resource.contentType.matches('application/json'));
           allow read: if request.auth != null;                             // we gotta tighten this up
         }
-        match /apps/{appId=*} {
-          match /shared-assets/{assetId=*} {
-            allow read: if request.auth != null;
-          }
-          match /user-assets/{userId=*}/{assetId=*} {
-            allow write: if request.auth.uid == userId                       // keep it namespaced
-                        && resource == null                                  // append-only
-                        && request.resource.size < 5 * 1024 * 1024           // < 5mb
-                        && (request.resource.contentType.matches('image/.*') // only images or json
-                          || request.resource.contentType.matches('application/json'));
-            allow read: if request.auth != null;                             // we gotta tighten this up
-          }
+        match /shared-assets/{assetId=*} {
+          allow read: if request.auth != null;
         }
       }
     }

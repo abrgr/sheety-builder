@@ -45,7 +45,7 @@ class Loader extends Component {
       return null;
     }
 
-    return children;
+    return children || null;
   }
 }
 
@@ -140,7 +140,8 @@ const AppVersionLoader = withRouter(
     ({ userAppVersions }) => ({
       isLoading: userAppVersions.get('isLoading'),
       error: userAppVersions.get('error'),
-      userAppVersions: userAppVersions.get('userAppVersions')
+      userAppVersions: userAppVersions.get('userAppVersions'),
+      appId: userAppVersions.get('appId')
     })
   )(props => (
     <Loader
@@ -148,10 +149,11 @@ const AppVersionLoader = withRouter(
       requiresLoad={({
         isLoading,
         error,
+        appId,
         userAppVersions,
         match
       }) => (
-        !isLoading && !error && (!userAppVersions || match.params.appId !== userAppVersions.get('appId'))
+        !isLoading && !error && (!userAppVersions || match.params.appId !== appId)
       )}
       requiresReload={({ match, uid, email }, { match: prevMatch, uid: prevUid, email: prevEmail }) => (
         match.params.appId !== prevMatch.params.appId || uid !== prevUid || email !== prevEmail
@@ -215,7 +217,7 @@ function Router({ isSignedIn }) {
                         <AppLoader {...props}>
                           <AppVersionLoader {...props}>
                             <Route
-                              path={editorRoutes.tab(':orgId', ':projectId', ':appId', ':versionId')}
+                              path={editorRoutes.tab(':orgId', ':projectId', ':appId', ':versionId', ':page')}
                               render={props => (
                                 <EditorLoader {...props} />
                               )} />

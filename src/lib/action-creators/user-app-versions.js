@@ -14,6 +14,7 @@ export function loadUserAppVersions(orgId, projectId, appId) {
     persistence.userAppVersions.list(orgId, projectId, appId).then(userAppVersions => {
       dispatch({
         type: RECEIVED_LOAD_USER_APP_VERSIONS,
+        appId,
         userAppVersions
       });
     }).catch(err => {
