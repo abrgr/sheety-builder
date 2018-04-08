@@ -17,22 +17,27 @@ export default getUid => ({
   },
 
   create(orgId, projectId, appId, versionName, description, baseVersion) {
-    const appVersion = new AppVersion({
-      orgId,
-      projectId,
-      appId,
-      name: versionName,
-      description: description,
-      base: baseVersion
-    });
+    getUid().then(uid => {
+      const appVersion = new AppVersion({
+        author: uid,
+        createdAt: new Date(),
+        orgId,
+        projectId,
+        appId,
+        name: versionName,
+        description: description,
+        base: baseVersion
+      });
 
-    return saveAppVersionToFirebase(
-      getUid,
-      orgId,
-      projectId,
-      appId,
-      appVersion
-    );
+      return saveAppVersionToFirebase(
+        getUid,
+        orgId,
+        projectId,
+        appId,
+        appVersion,
+        uid
+      );
+    });
   },
 
   getUserPresenterByHash(orgId, projectId, presenterHash) {
@@ -66,11 +71,19 @@ export default getUid => ({
     const modelJSON = JSON.stringify(model.toJS());
     const presenterJSON = JSON.stringify(presenter.toJS());
     const modelId = model.get('providerId');
-    const updatedAppVersion = appVersion.set('base', appVersion)
-                                        .setModelJSON(modelId, modelJSON)
-                                        .setPresenterJSON(presenterJSON);
 
     return getUid().then(uid => {
+    const updatedAppVersion = appVersion.set('base', appVersion)
+                                        .set('author', uid)
+                                        .set('createdAt', new Date())
+                                        .setModelJSON(modelId, modelJSON)
+                                        .setPresenterJSON(presenterJSON);
+      if ( appVersion.delete('base').delete('createdAt')
+                     .equals(updatedAppVersion.delete('base').delete('createdAt')) ) {
+        // no need to update anything
+        return this.list(orgId, projectId, appId); // TODO: shouldn't need another read here
+      }
+
       const userAssetPrefix = getUserAssetPathPrefix(orgId, projectId, uid);
       const modelPath = getModelPath(userAssetPrefix, updatedAppVersion.getIn(['modelHashesById', modelId]));
       const presenterPath = getPresenterPath(userAssetPrefix, updatedAppVersion.get('presenterHash'));
