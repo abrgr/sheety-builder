@@ -2,7 +2,6 @@ import React, { Component } from 'react';
 import { List, Map } from 'immutable';
 import { connect } from 'react-redux';
 import { withRouter } from 'react-router';
-import CircularProgress from 'material-ui/CircularProgress';
 import IconButton from 'material-ui/IconButton';
 import Dialog from 'material-ui/Dialog';
 import FlatButton from 'material-ui/FlatButton';
@@ -14,6 +13,8 @@ import { GridList, GridTile } from 'material-ui/GridList';
 import { projectActions } from '../action-creators';
 import { projectRoutes } from '../routes';
 import { Project } from '../models';
+import Loader from '../components/loader';
+import ErrorMsg from '../components/error-msg';
 
 class ProjectList extends Component {
   constructor(props) {
@@ -37,16 +38,14 @@ class ProjectList extends Component {
 
     if ( isLoading ) {
       return (
-        <CircularProgress
-          mode="indeterminate" />
+        <Loader />
       );
     }
 
     if ( error ) {
       return (
-        <p>
-          {error}
-        </p>
+        <ErrorMsg
+          msg={error} />
       );
     }
 

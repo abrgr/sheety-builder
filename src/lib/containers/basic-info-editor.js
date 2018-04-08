@@ -6,11 +6,12 @@ import FlatButton from 'material-ui/FlatButton';
 import Dialog from 'material-ui/Dialog';
 import Paper from 'material-ui/Paper';
 import { GridList, GridTile } from 'material-ui/GridList';
-import CircularProgress from 'material-ui/CircularProgress';
 import IconButton from 'material-ui/IconButton';
 import CreateImg from 'material-ui/svg-icons/content/add-circle';
 import OpenImg from 'material-ui/svg-icons/action/open-in-new';
 import { lightBlue400 } from 'material-ui/styles/colors';
+import Loader from '../components/loader';
+import ErrorMsg from '../components/error-msg';
 import { userAppVersionsActions, projectActions } from '../action-creators';
 import { editorRoutes } from '../routes';
 
@@ -145,14 +146,12 @@ class BasicInfoEditor extends Component {
             onChange={this.onUpdateAppName} />
           {!!error
             ? (
-              <Paper>
-                An error occured!
-              </Paper>
+              <ErrorMsg
+                msg="An error occured!" />
             ) : null}
           {isLoading
             ? (
-              <CircularProgress
-                mode='indeterminate' />
+              <Loader />
             ) : null}
           <InProgressItems
             onEditVersion={this.onEditVersion}

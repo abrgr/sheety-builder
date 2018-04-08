@@ -1,8 +1,9 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import CircularProgress from 'material-ui/CircularProgress';
 import ImporterComponent from '../components/importer';
 import SheetLogicEditor from '../components/sheet-logic-editor';
+import Loader from '../components/loader';
+import ErrorMsg from '../components/error-msg';
 import { editorActions } from '../action-creators';
 import { createProviderId } from '../spreadsheet-utils';
 
@@ -21,9 +22,8 @@ class Importer extends Component {
 
     if ( error ) {
       return (
-        <p>
-          An error occured!
-        </p>
+        <ErrorMsg
+          msg="An error occured!" />
       );
     }
 
@@ -37,8 +37,7 @@ class Importer extends Component {
           style={{ margin: 20 }}>
           {isLoading
             ? (
-              <CircularProgress
-                mode='indeterminate' />
+              <Loader />
             ) : (
               <SheetLogicEditor
                 calc={calc} />

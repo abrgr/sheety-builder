@@ -6,6 +6,8 @@ import Pallette from '../components/pallette';
 import Configurator from '../components/configurator';
 import Preview from '../components/preview';
 import Breadcrumbs from '../components/breadcrumbs';
+import Loader from '../components/loader';
+import ErrorMsg from '../components/error-msg';
 import loadPresenters from '../presenter-registry';
 
 class PresenterEditor extends Component {
@@ -15,6 +17,8 @@ class PresenterEditor extends Component {
 
   render() {
     const {
+      isLoading,
+      error,
       calc,
       presenter,
       presentersByType,
@@ -22,6 +26,19 @@ class PresenterEditor extends Component {
       linkPath,
       dispatch
     } = this.props;
+
+    if ( isLoading ) {
+      return (
+        <Loader />
+      );
+    }
+
+    if ( error ) {
+      return (
+        <ErrorMsg
+          msg={error} />
+      );
+    }
 
     const presenterComponent = presentersByType.get(presenter.getIn(editingPresenterPath.concat(['type'])));
 

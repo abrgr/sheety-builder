@@ -2,7 +2,6 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { withRouter } from 'react-router';
 import { projectActions } from '../action-creators';
-import CircularProgress from 'material-ui/CircularProgress';
 import CreateImg from 'material-ui/svg-icons/content/add-circle';
 import OpenImg from 'material-ui/svg-icons/action/open-in-new';
 import RaisedButton from 'material-ui/RaisedButton';
@@ -12,6 +11,8 @@ import { GridList, GridTile } from 'material-ui/GridList';
 import { Card, CardActions, CardHeader, CardText } from 'material-ui/Card';
 import ModifiableImg from '../components/modifiable-img';
 import CreateAppDialog from '../components/create-app-dialog';
+import Loader from '../components/loader';
+import ErrorMsg from '../components/error-msg';
 import { App } from '../models';
 import { appRoutes } from '../routes';
 
@@ -33,16 +34,14 @@ class Project extends Component {
 
     if ( isLoading ) {
       return (
-        <CircularProgress
-          mode="indeterminate" />
+        <Loader />
       );
     }
 
     if ( error ) {
       return (
-        <p>
-          {error}
-        </p>
+        <ErrorMsg
+          msg={error} />
       );
     }
 
