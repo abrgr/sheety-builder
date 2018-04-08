@@ -3,7 +3,9 @@ import { List } from 'immutable';
 
 const funcsToIgnore = /IntrinioDataPoint/i;
 
-export default function sheetToModel(spreadsheet) {
+export default function sheetToModel(providerId, spreadsheet) {
+  const { properties } = spreadsheet;
+  const { defaultFormat, title } = properties;
   const tabs = List(spreadsheet.sheets).filter((sheet) => (
     sheet.properties.sheetType === 'GRID'
   )).map((sheet) => (
@@ -15,7 +17,7 @@ export default function sheetToModel(spreadsheet) {
             new List(values).map((cellValue) => {
               const formulaValue = !!cellValue.userEnteredValue
                                  ? cellValue.userEnteredValue.formulaValue
-                                 : null; 
+                                 : null;
               const isIgnoredFunc = !!funcsToIgnore.exec(formulaValue);
               const staticValue = !!formulaValue && !isIgnoredFunc
                                 ? null
@@ -25,7 +27,7 @@ export default function sheetToModel(spreadsheet) {
                 return null;
               }
 
-              const format = cellValue.effectiveFormat && cellValue.effectiveFormat.numberFormat;
+              const format = cellValue.effectiveFormat ? cellValue.effectiveFormat.numberFormat : defaultFormat.numberFormat;
 
               return new Cell({
                 staticValue,
@@ -45,6 +47,9 @@ export default function sheetToModel(spreadsheet) {
   ));
 
   return new Sheet({
+    providerId,
+    providerUrl: spreadsheet.spreadsheetUrl,
+    title,
     tabs
   });
 }

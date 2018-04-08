@@ -4,18 +4,20 @@ import CircularProgress from 'material-ui/CircularProgress';
 import ImporterComponent from '../components/importer';
 import SheetLogicEditor from '../components/sheet-logic-editor';
 import { editorActions } from '../action-creators';
+import { createProviderId } from '../spreadsheet-utils';
 
 class Importer extends Component {
   constructor(props) {
     super(props);
 
     this.state = {
+      source: 'google',
       sheetId: ''
     };
   }
 
   render() {
-    const { isLoading, error, calc, model } = this.props;
+    const { isLoading, error, calc } = this.props;
 
     if ( error ) {
       return (
@@ -41,9 +43,6 @@ class Importer extends Component {
               <SheetLogicEditor
                 calc={calc} />
             )}
-          <pre>
-            {JSON.stringify(model && model.toJS())}
-          </pre>
         </div>
       </div>
     );
@@ -55,7 +54,7 @@ class Importer extends Component {
 
   onImport = (evt) => {
     evt.preventDefault();
-    this.props.dispatch(editorActions.importSheet(this.state.sheetId));
+    this.props.dispatch(editorActions.importSheet(createProviderId(this.state.source, this.state.sheetId)));
   };
 }
 

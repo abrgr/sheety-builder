@@ -10,16 +10,15 @@ import {
   APP_SAVING_COMPLETED,
   APP_SAVING_FAILED,
   SET_PRESENTERS_BY_TYPE,
-  RECEIVED_SPREADSHEET_ID,
+  REQUESTED_IMPORT_MODEL,
   RECEIVED_MODEL,
   RECEIVED_IMPORT_ERROR,
   SET_LINK_PATH,
   CLEAR_LINK_PATH
 } from '../actions';
 import * as persistence from '../persistence';
-import { getSpreadsheet } from '../google';
-import sheetToModel from '../sheet-to-model';
 import firebase from '../firebase';
+import { getModel } from '../spreadsheet-utils';
 
 export function setAppVersion(appVersion) {
   return dispatch => {
@@ -106,13 +105,13 @@ export function updatePresenterAtPath(path, presenter) {
   };
 }
 
-export function save(appVersion, spreadsheetId, model, presenter) {
+export function save(appVersion, model, presenter) {
   return dispatch => {
     dispatch({
       type: APP_SAVING_INITIATED
     });
 
-    persistence.userAppVersions.saveAppVersion(appVersion, spreadsheetId, model, presenter)
+    persistence.userAppVersions.saveAppVersion(appVersion, model, presenter)
       .then(() => {
         dispatch({
           type: APP_SAVING_COMPLETED
@@ -136,16 +135,15 @@ export function setPresentersByType(presentersByType) {
 export function importSheet(spreadsheetId) {
   return (dispatch) => {
     dispatch({
-      type: RECEIVED_SPREADSHEET_ID,
-      spreadsheetId
+      type: REQUESTED_IMPORT_MODEL
     });
 
-    getSpreadsheet(spreadsheetId).then(sheetToModel).then((model) => {
+    getModel(spreadsheetId).then(model => {
       dispatch({
         type: RECEIVED_MODEL,
         model
       });
-    }).catch((err) => {
+    }).catch(err => {
       if ( err.status === 401 ) {
         firebase.auth().signOut();
         window.location = '/';

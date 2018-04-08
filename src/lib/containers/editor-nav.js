@@ -91,13 +91,12 @@ class EditorNav extends Component {
   onSave = () => {
     const {
       appVersion,
-      spreadsheetId,
       model,
       presenter,
       dispatch
     } = this.props;
-    
-    dispatch(editorActions.save(appVersion, spreadsheetId, model, presenter));
+
+    dispatch(editorActions.save(appVersion, model, presenter));
   };
 }
 
@@ -109,7 +108,6 @@ export default withRouter(
       appVersion: editor.get('appVersion'),
       model: editor.get('model'),
       presenter: editor.get('presenter'),
-      spreadsheetId: editor.get('spreadsheetId'),
       displayName: auth.get('displayName'),
       email: auth.get('email'),
       photoURL: auth.get('photoURL')

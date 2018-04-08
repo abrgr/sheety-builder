@@ -11,7 +11,6 @@ const initialState = new Record({
   linkPath: null,
   presentersByType: new Map(),
   isLoading: false,
-  spreadsheetId: null,
   model: null,
   error: null,
   calc: null
@@ -30,7 +29,7 @@ export default function editor(state = initialState, action) {
         isLoading: false,
         model,
         presenter: action.presenter,
-        calc: new Calculator(model)
+        calc: model ? new Calculator(model) : null
       });
     case actions.ERRORED_APP_VERSION:
       return state.merge({
@@ -48,11 +47,9 @@ export default function editor(state = initialState, action) {
       return state.set('editingPresenterPath', action.editingPresenterPath);
     case actions.SET_PRESENTERS_BY_TYPE:
       return state.set('presentersByType', action.presentersByType);
-    case actions.RECEIVED_SPREADSHEET_ID:
+    case actions.REQUESTED_IMPORT_MODEL:
       return state.merge({
-        isLoading: true,
-        spreadsheetId: action.spreadsheetId,
-        model: null
+        isLoading: true
       });
     case actions.RECEIVED_MODEL:
       return state.merge({
@@ -63,7 +60,6 @@ export default function editor(state = initialState, action) {
     case actions.RECEIVED_IMPORT_ERROR:
       return state.merge({
         isLoading: false,
-        model: null,
         error: action.err
       });
     case actions.SET_LINK_PATH:

@@ -8,7 +8,6 @@ service firebase.storage {
       match /projects/{projectId=*} {
         match /user-assets/{userId=*}/{assetId=*} {
           allow write: if request.auth.uid == userId                       // keep it namespaced
-                      && resource == null                                  // append-only
                       && request.resource.size < 5 * 1024 * 1024           // < 5mb
                       && (request.resource.contentType.matches('image/.*') // only images or json
                         || request.resource.contentType.matches('application/json'));

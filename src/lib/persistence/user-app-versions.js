@@ -59,12 +59,13 @@ export default getUid => ({
     ));
   },
 
-  saveAppVersion(appVersion, modelId, model, presenter) {
+  saveAppVersion(appVersion, model, presenter) {
     const orgId = appVersion.get('orgId');
     const projectId = appVersion.get('projectId');
     const appId = appVersion.get('appId');
     const modelJSON = JSON.stringify(model.toJS());
     const presenterJSON = JSON.stringify(presenter.toJS());
+    const modelId = model.get('providerId');
     const updatedAppVersion = appVersion.set('base', appVersion)
                                         .setModelJSON(modelId, modelJSON)
                                         .setPresenterJSON(presenterJSON);
