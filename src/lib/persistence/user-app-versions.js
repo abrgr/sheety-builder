@@ -4,6 +4,7 @@ import { AppVersion } from '../models';
 
 const db = firebase.firestore();
 const storage = firebase.storage();
+const functions = firebase.functions();
 
 export default getUid => ({
   list(orgId, projectId, appId) {
@@ -94,6 +95,25 @@ export default getUid => ({
       ]).then(() => {
         saveAppVersionToFirebase(getUid, orgId, projectId, appId, updatedAppVersion, uid)
       })
+    });
+  },
+
+  promoteAppVersion(appVersion, destinationBranchName) {
+    const orgId = appVersion.get('orgId');
+    const projectId = appVersion.get('projectId');
+    const appId = appVersion.get('appId');
+
+    const remotePromoteAppVersion = functions.httpsCallable('shareAppVersion');
+    return remotePromoteAppVersion({
+      orgId,
+      projectId,
+      appId,
+      appVersion: appVersion.toJS(),
+      destinationBranchName
+    }).then(() => {
+
+    }).catch(err => {
+
     });
   }
 })

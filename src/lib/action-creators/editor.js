@@ -176,3 +176,10 @@ export function setApp(app) {
     app
   };
 }
+
+export function promoteAppVersion(appVersion, versionToPublish) {
+  // TODO
+  return dispatch => {
+    persistence.userAppVersions.promoteAppVersion(appVersion, versionToPublish);
+  };
+}

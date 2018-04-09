@@ -39,7 +39,8 @@ class EditorNav extends Component {
             onClick={this.onSave} />,
           <MenuItem
             key="publish"
-            primaryText="Publish" />
+            primaryText="Publish"
+            onClick={this.onPublish} />
         ]}
         leftMenuItems={[
           <MenuItem
@@ -109,6 +110,13 @@ class EditorNav extends Component {
 
     dispatch(editorActions.save(appVersion, model, presenter));
   };
+
+  onPublish = () => {
+    // TODO: ask the user what version to promote to
+    const { appVersion, dispatch } = this.props;
+
+    dispatch(editorActions.promoteAppVersion(appVersion, 'production'));
+  }
 }
 
 export default withRouter(
