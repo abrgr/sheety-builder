@@ -14,7 +14,8 @@ import {
   RECEIVED_MODEL,
   RECEIVED_IMPORT_ERROR,
   SET_LINK_PATH,
-  CLEAR_LINK_PATH
+  CLEAR_LINK_PATH,
+  SET_SHOW_SHARE_VERSION_DIALOG
 } from '../actions';
 import * as persistence from '../persistence';
 import firebase from '../firebase';
@@ -59,33 +60,31 @@ export function setAppVersion(appVersion) {
 }
 
 function loadPresenter(appVersion) {
-  const userHash = appVersion.get('presenterHash');
+  const presenterHash = appVersion.get('presenterHash');
   const orgId = appVersion.get('orgId');
   const projectId = appVersion.get('projectId');
+  const author = appVersion.get('author');
 
-  if ( !!userHash ) {
-    return persistence.userAppVersions.getUserPresenterByHash(orgId, projectId, userHash);
+  if ( !presenterHash ) {
+    return Promise.resolve(null);
   }
 
-  return persistence.userAppVersions.getPublicPresenterByHash(orgId, projectId, userHash);
+  return persistence.userAppVersions.getPresenter(orgId, projectId, author, presenterHash);
 }
 
 function loadModels(appVersion) {
   const userModels = appVersion.get('modelHashesById');
   const orgId = appVersion.get('orgId');
   const projectId = appVersion.get('projectId');
+  const author = appVersion.get('author');
 
-  if ( !!userModels && !userModels.isEmpty() ) {
-    return Promise.all(
-      userModels.valueSeq().map(
-        persistence.userAppVersions.getUserModelByHash.bind(null, orgId, projectId)
-      )
-    );
+  if ( !userModels || userModels.isEmpty() ) {
+    return Promise.resolve(new List());
   }
 
   return Promise.all(
-    appVersion.getIn(['base', 'modelHashesById']).valueSeq().map(
-      persistence.userAppVersions.getPublicModelByHash.bind(null, orgId, projectId)
+    userModels.valueSeq().map(
+      persistence.userAppVersions.getModel.bind(null, orgId, projectId, author)
     )
   );
 }
@@ -177,9 +176,16 @@ export function setApp(app) {
   };
 }
 
-export function promoteAppVersion(appVersion, versionToPublish) {
+export function shareAppVersion(appVersion, versionToPublish) {
   // TODO
   return dispatch => {
-    persistence.userAppVersions.promoteAppVersion(appVersion, versionToPublish);
+    return persistence.userAppVersions.shareAppVersion(appVersion, versionToPublish);
+  };
+}
+
+export function setShowShareVersionDialog(showShareVersionDialog) {
+  return {
+    type: SET_SHOW_SHARE_VERSION_DIALOG,
+    showShareVersionDialog
   };
 }

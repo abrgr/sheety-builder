@@ -88,7 +88,7 @@ class Project extends Component {
               </IconButton>
             }>
           </GridTile>
-          {project.apps.map(app => (
+          {project.get('apps').map(app => (
             <GridTile
               key={app.get('name')}
               title={app.get('name')}

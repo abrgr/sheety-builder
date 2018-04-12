@@ -18,7 +18,7 @@ export default getUid => ({
   },
 
   create(orgId, projectId, appId, versionName, description, baseVersion) {
-    getUid().then(uid => {
+    return getUid().then(uid => {
       const appVersion = new AppVersion({
         author: uid,
         createdAt: new Date(),
@@ -41,27 +41,19 @@ export default getUid => ({
     });
   },
 
-  getUserPresenterByHash(orgId, projectId, presenterHash) {
+  getPresenter(orgId, projectId, author, presenterHash) {
     return getUid().then(uid => (
-      getPresenterByHash(getUserAssetPathPrefix(orgId, projectId, uid), presenterHash)
+      uid === author
+        ? getUserPresenterByHash(orgId, projectId, presenterHash, uid)
+        : getPublicPresenterByHash(orgId, projectId, presenterHash)
     ));
   },
 
-  getPublicPresenterByHash(orgId, projectId, presenterHash) {
+  getModel(orgId, projectId, author, modelHash) {
     return getUid().then(uid => (
-      getPresenterByHash(getSharedAssetPathPrefix(orgId, projectId), presenterHash)
-    ));
-  },
-
-  getUserModelByHash(orgId, projectId, modelHash) {
-    return getUid().then(uid => (
-      getModelByHash(getUserAssetPathPrefix(orgId, projectId, uid), modelHash)
-    ));
-  },
-
-  getPublicModelByHash(orgId, projectId, modelHash) {
-    return getUid().then(uid => (
-      getModelByHash(getSharedAssetPathPrefix(orgId, projectId), modelHash)
+      uid === author
+        ? getUserModelByHash(orgId, projectId, modelHash, uid)
+        : getPublicModelByHash(orgId, projectId, modelHash)
     ));
   },
 
@@ -69,16 +61,20 @@ export default getUid => ({
     const orgId = appVersion.get('orgId');
     const projectId = appVersion.get('projectId');
     const appId = appVersion.get('appId');
-    const modelJSON = JSON.stringify(model.toJS());
-    const presenterJSON = JSON.stringify(presenter.toJS());
-    const modelId = model.get('providerId');
+    const modelJSON = model ? JSON.stringify(model.toJS()) : null;
+    const presenterJSON = presenter ? JSON.stringify(presenter.toJS()) : null;
+    const modelId = model ? model.get('providerId') : null;
 
     return getUid().then(uid => {
-    const updatedAppVersion = appVersion.set('base', appVersion)
-                                        .set('author', uid)
-                                        .set('createdAt', new Date())
-                                        .setModelJSON(modelId, modelJSON)
-                                        .setPresenterJSON(presenterJSON);
+      let updatedAppVersion = appVersion.set('base', appVersion)
+                                          .set('author', uid)
+                                          .set('createdAt', new Date());
+      updatedAppVersion = modelJSON
+                        ? updatedAppVersion.setModelJSON(modelId, modelJSON)
+                        :  updatedAppVersion;
+      updatedAppVersion = presenterJSON
+                        ? updatedAppVersion.setPresenterJSON(presenterJSON)
+                        : updatedAppVersion;
       if ( appVersion.delete('base').delete('createdAt')
                      .equals(updatedAppVersion.delete('base').delete('createdAt')) ) {
         // no need to update anything
@@ -94,11 +90,11 @@ export default getUid => ({
         putAsset(presenterPath, presenterJSON)
       ]).then(() => {
         saveAppVersionToFirebase(getUid, orgId, projectId, appId, updatedAppVersion, uid)
-      })
+      });
     });
   },
 
-  promoteAppVersion(appVersion, destinationBranchName) {
+  shareAppVersion(appVersion, destinationBranchName) {
     const orgId = appVersion.get('orgId');
     const projectId = appVersion.get('projectId');
     const appId = appVersion.get('appId');
@@ -108,7 +104,7 @@ export default getUid => ({
       orgId,
       projectId,
       appId,
-      appVersion: appVersion.toJS(),
+      appVersion: appVersion.toNetworkRepresentation(),
       destinationBranchName
     }).then(() => {
 
@@ -161,6 +157,10 @@ function getAsset(path) {
 }
 
 function putAsset(path, json) {
+  if ( !json ) {
+    return Promise.resolve(null);
+  }
+
   return storage.ref()
          .child(path)
          .putString(json, 'raw', { contentType: 'application/json' });
@@ -187,11 +187,27 @@ function saveAppVersionToFirebase(getUid, orgId, projectId, appId, appVersion, u
 
         txn.set(
           versionRef,
-          newVersions.toJS()
+          newVersions.map(v => v.toNetworkRepresentation()).toJS()
         );
 
         return newVersions;
       });
     })
   ));
+}
+
+function getUserPresenterByHash(orgId, projectId, presenterHash, uid) {
+  return getPresenterByHash(getUserAssetPathPrefix(orgId, projectId, uid), presenterHash);
+}
+
+function getPublicPresenterByHash(orgId, projectId, presenterHash) {
+  return getPresenterByHash(getSharedAssetPathPrefix(orgId, projectId), presenterHash);
+}
+
+function getUserModelByHash(orgId, projectId, modelHash, uid) {
+  return getModelByHash(getUserAssetPathPrefix(orgId, projectId, uid), modelHash);
+}
+
+function getPublicModelByHash(orgId, projectId, modelHash) {
+  return getModelByHash(getSharedAssetPathPrefix(orgId, projectId), modelHash);
 }

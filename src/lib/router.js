@@ -10,6 +10,7 @@ import EditorNav from './containers/editor-nav';
 import ProjectsNav from './containers/projects-nav';
 import ProjectList from './containers/project-list';
 import Project from './containers/project';
+import ShareVersionDialog from './containers/share-version-dialog';
 import { projectRoutes, appRoutes, editorRoutes } from './routes';
 import { projectsActions, projectActions, userAppVersionsActions, editorActions } from './action-creators';
 
@@ -129,7 +130,7 @@ const AppLoader = withRouter(
       )}
       getLoadAction={({ match, project, app }) => (
         editorActions.setApp(
-          project.apps.find(app => app.get('id') === match.params.appId)
+          project.get('apps').find(app => app.get('id') === match.params.appId)
         )
       )} />
   ))
@@ -243,6 +244,14 @@ function Router({ isSignedIn }) {
             path={projectRoutes.list()}
             component={ProjectsNav} />
         </Switch>
+
+        {/**
+          * Cross-cutting views.  Order matters.
+          **/}
+        <Route
+          path={editorRoutes.tab(':orgId', ':projectId', ':appId', ':versionId', ':page')}
+          component={ShareVersionDialog} />
+
         {/**
           * Content elements.  Order should not matter.
           **/}

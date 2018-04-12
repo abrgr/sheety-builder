@@ -38,9 +38,9 @@ class EditorNav extends Component {
             primaryText="Save"
             onClick={this.onSave} />,
           <MenuItem
-            key="publish"
-            primaryText="Publish"
-            onClick={this.onPublish} />
+            key="share"
+            primaryText="Share"
+            onClick={this.onShare} />
         ]}
         leftMenuItems={[
           <MenuItem
@@ -111,11 +111,10 @@ class EditorNav extends Component {
     dispatch(editorActions.save(appVersion, model, presenter));
   };
 
-  onPublish = () => {
-    // TODO: ask the user what version to promote to
-    const { appVersion, dispatch } = this.props;
+  onShare = () => {
+    const { dispatch } = this.props;
 
-    dispatch(editorActions.promoteAppVersion(appVersion, 'production'));
+    dispatch(editorActions.setShowShareVersionDialog(true));
   }
 }
 

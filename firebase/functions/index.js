@@ -25,42 +25,60 @@ function shareAppVersion(orgId, projectId, appId, appVersion, destinationBranchN
       shareAsset(orgId, projectId, uid, 'model', appVersion.modelHashesById[id])
     ))
   );
-  const sharePresentersPromise = shareAsset(orgId, projectId, uid, 'presenter', appVersion.presenterHash);
+  const sharePresentersPromise = appVersion.presenterHash
+                               ? shareAsset(orgId, projectId, uid, 'presenter', appVersion.presenterHash)
+                               : Promise.resolve();
 
   const projectRef = db.doc(`/orgs/${orgId}/projects/${projectId}`);
+  const userAppVersionRef = db.doc(`/orgs/${orgId}/projects/${projectId}/apps/${appId}/user-versions/${uid}`);
   const txnPromise = db.runTransaction(txn => {
-    return txn.get(projectRef)
-              .then(doc => {
-                if ( !doc.exists ) {
-                  throw new functions.https.HttpsError('not-found');
-                }
+    return Promise.all([
+      txn.get(projectRef),
+      txn.get(userAppVersionRef)
+    ]).then(([projectDoc, userAppVersionDoc]) => {
+      if ( !projectDoc.exists || !userAppVersionDoc.exists ) {
+        throw new functions.https.HttpsError('not-found');
+      }
 
-                const project = doc.data();
+      const project = projectDoc.data();
+      const dbAppVersion = userAppVersionDoc.data();
 
-                if ( !project.admins[uid] && !project.admins[uid] ) {
-                  throw new functions.https.HttpsError('unauthenticated');
-                }
+      if ( !dbAppVersion[appVersion.name] ) {
+        // the user must have already saved to their local branch before pushing
+        throw new functions.https.HttpsError('not-found');
+      }
 
-                const idx = indexOf(project.apps, app => app.id === appId);
-                if ( idx < 0 ) {
-                  throw new functions.https.HttpsError('not-found');
-                }
+      //
+      // AUTHORIZE!
+      //
+      if ( !project.admins[uid] && !project.writers[uid] ) {
+        throw new functions.https.HttpsError('unauthenticated');
+      }
 
-                const currentVersion = project.apps[idx].publishedVersions[destinationBranchName];
-                if ( currentVersion ) {
-                  // TODO: check that appVersion extends destinationBranchName
-                  const extendsCurrent = false;
-                  if ( !extendsCurrent ) {
-                    throw new functions.https.HttpsError('failed-precondition');
-                  }
-                }
+      // get current branch head (currentVersion)
+      const idx = indexOf(project.apps, app => app.id === appId);
+      if ( idx < 0 ) {
+        throw new functions.https.HttpsError('not-found');
+      }
+      const currentVersion = project.apps[idx].publishedVersions[destinationBranchName];
+      if ( currentVersion ) {
+        // TODO: check that appVersion extends destinationBranchName
+        const extendsCurrent = false;
+        if ( !extendsCurrent ) {
+          throw new functions.https.HttpsError('failed-precondition');
+        }
+      }
 
-                project.apps[idx].publishedVersions[destinationBranchName] = appVersion;
+      // publish the version
+      project.apps[idx].publishedVersions[destinationBranchName] = appVersion;
+      txn.set(projectRef, project);
 
-                txn.set(projectRef, project);
+      // we delete the local branch after pushing to the remote
+      delete dbAppVersion[appVersion.name];
+      txn.set(userAppVersionRef, dbAppVersion);
 
-                return null;
-              });
+      return null;
+    });
   });
 
   return Promise.all([

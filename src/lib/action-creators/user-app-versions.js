@@ -32,7 +32,7 @@ export function create(orgId, projectId, appId, versionName, description, baseVe
       type: REQUESTED_LOAD_USER_APP_VERSIONS
     });
 
-    persistence.userAppVersions.create(orgId, projectId, appId, versionName, description, baseVersion).then(userAppVersions => {
+    return persistence.userAppVersions.create(orgId, projectId, appId, versionName, description, baseVersion).then(userAppVersions => {
       dispatch({
         type: RECEIVED_LOAD_USER_APP_VERSIONS,
         userAppVersions

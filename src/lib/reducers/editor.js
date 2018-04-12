@@ -13,7 +13,8 @@ const initialState = new Record({
   isLoading: false,
   model: null,
   error: null,
-  calc: null
+  calc: null,
+  showShareVersionDialog: false
 })();
 
 export default function editor(state = initialState, action) {
@@ -66,6 +67,8 @@ export default function editor(state = initialState, action) {
       return state.set('linkPath', action.linkPath);
     case actions.CLEAR_LINK_PATH:
       return state.set('linkPath', null);
+    case actions.SET_SHOW_SHARE_VERSION_DIALOG:
+      return state.set('showShareVersionDialog', action.showShareVersionDialog);
     default:
       return state;
   }

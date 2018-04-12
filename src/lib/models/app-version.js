@@ -55,7 +55,8 @@ export default class AppVersion extends AppVersionRecord {
 
   isLegitimateChildOf(possibleProgenitor) {
     const base = this.get('base');
-    if ( !possibleProgenitor && !base ) {
+    if ( !possibleProgenitor ) {
+      // null can beget anything
       return true;
     }
     if ( !base ) {
@@ -64,6 +65,15 @@ export default class AppVersion extends AppVersionRecord {
 
     const possibleProgenitorVersion = new AppVersion(possibleProgenitor);
     return base.equals(possibleProgenitorVersion);
+  }
+
+  toNetworkRepresentation() {
+    const createdAt = this.get('createdAt');
+    const base = this.get('base');
+    const networkRep = new Map(this).set('createdAt', createdAt ? createdAt.getTime() : null)
+                                    .set('base', base ? base.toNetworkRepresentation() : null);
+
+    return networkRep.toJS();
   }
 }
 

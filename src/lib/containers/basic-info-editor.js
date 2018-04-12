@@ -215,7 +215,7 @@ class BasicInfoEditor extends Component {
   };
 
   onCreateNewVersion = () => {
-    const { dispatch, app, match } = this.props;
+    const { dispatch, app, history, match } = this.props;
     const { versionName, versionDescription, selectedBaseVersion } = this.state;
     const { orgId, projectId, appId } = match.params;
 
@@ -228,9 +228,17 @@ class BasicInfoEditor extends Component {
         versionDescription,
         app.getIn(['publishedVersions', selectedBaseVersion])
       )
-    );
-
-    this.onCloseNewVersionDialog();
+    ).then(() => {
+      // TODO: update projects
+      history.push(
+        editorRoutes.default(
+          orgId,
+          projectId,
+          appId,
+          versionName
+        )
+      );
+    });
   };
 
   onEditVersion = appVersionId => {

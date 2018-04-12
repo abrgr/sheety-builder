@@ -1,6 +1,6 @@
 import React from 'react';
 
-export default msg => (
+export default ({ msg }) => (
     <p>
       {msg}
     </p>
