@@ -70,7 +70,7 @@ export default getUid => ({
                                           .set('author', uid)
                                           .set('createdAt', new Date());
       updatedAppVersion = modelJSON
-                        ? updatedAppVersion.setModelJSON(modelId, modelJSON)
+                        ? updatedAppVersion.setModelJSON(modelId, modelJSON, model)
                         :  updatedAppVersion;
       updatedAppVersion = presenterJSON
                         ? updatedAppVersion.setPresenterJSON(presenterJSON)
@@ -82,15 +82,15 @@ export default getUid => ({
       }
 
       const userAssetPrefix = getUserAssetPathPrefix(orgId, projectId, uid);
-      const modelPath = getModelPath(userAssetPrefix, updatedAppVersion.getIn(['modelHashesById', modelId]));
+      const modelPath = getModelPath(userAssetPrefix, updatedAppVersion.getIn(['modelInfoById', modelId, 'contentHash']));
       const presenterPath = getPresenterPath(userAssetPrefix, updatedAppVersion.get('presenterHash'));
 
       return Promise.all([
         putAsset(modelPath, modelJSON),
         putAsset(presenterPath, presenterJSON)
-      ]).then(() => {
+      ]).then(() => (
         saveAppVersionToFirebase(getUid, orgId, projectId, appId, updatedAppVersion, uid)
-      });
+      ));
     });
   },
 
@@ -177,7 +177,7 @@ function saveAppVersionToFirebase(getUid, orgId, projectId, appId, appVersion, u
         const versionName = appVersion.get('name');
 
         if ( !appVersion.isLegitimateChildOf(existingVersions.get(versionName)) ) {
-          return Promise.reject('Inconsistent');
+          return Promise.reject(new Error('Inconsistent'));
         }
 
         const newVersions = existingVersions.set(

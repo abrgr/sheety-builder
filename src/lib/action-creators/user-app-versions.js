@@ -35,6 +35,7 @@ export function create(orgId, projectId, appId, versionName, description, baseVe
     return persistence.userAppVersions.create(orgId, projectId, appId, versionName, description, baseVersion).then(userAppVersions => {
       dispatch({
         type: RECEIVED_LOAD_USER_APP_VERSIONS,
+        appId,
         userAppVersions
       });
     }).catch(err => {

@@ -37,6 +37,14 @@ export default function editor(state = initialState, action) {
         isLoading: false,
         error: action.error
       });
+    case actions.APP_SAVING_COMPLETED:
+      return state.merge({
+        appVersion: new AppVersion(action.appVersion),
+        isLoading: false,
+        model: action.model,
+        presenter: action.presenter,
+        calc: action.model ? new Calculator(action.model) : null
+      });
     case actions.RECEIVED_SAVE_PROJECT:
       const newApp = action.project.get('apps').find(app => app.get('id') === state.app.get('id'));
       return newApp

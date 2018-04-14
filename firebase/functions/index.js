@@ -21,8 +21,8 @@ exports.shareAppVersion = functions.https.onCall((data, context) => {
 
 function shareAppVersion(orgId, projectId, appId, appVersion, destinationBranchName, uid) {
   const shareModelsPromise = Promise.all(
-    Object.keys(appVersion.modelHashesById).map(id => (
-      shareAsset(orgId, projectId, uid, 'model', appVersion.modelHashesById[id])
+    Object.keys(appVersion.modelInfoById).map(id => (
+      shareAsset(orgId, projectId, uid, 'model', appVersion.modelInfoById[id].contentHash)
     ))
   );
   const sharePresentersPromise = appVersion.presenterHash

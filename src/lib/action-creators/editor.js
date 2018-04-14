@@ -1,4 +1,4 @@
-import { List, Map } from 'immutable';
+import { List } from 'immutable';
 import {
   SET_APP,
   REQUESTED_APP_VERSION,
@@ -26,19 +26,6 @@ export function setAppVersion(appVersion) {
     dispatch({
       type: REQUESTED_APP_VERSION
     });
-
-    const hasOwnChanges = appVersion.hasOwnChanges();
-    const isFromScratch = appVersion.isFromScratch();
-
-    if ( !hasOwnChanges && isFromScratch ) {
-      // nothing to load
-      return dispatch({
-        type: RECEIVED_APP_VERSION,
-        appVersion,
-        models: new List(),
-        presenter: new Map()
-      });
-    }
 
     Promise.all([
       loadPresenter(appVersion),
@@ -73,17 +60,17 @@ function loadPresenter(appVersion) {
 }
 
 function loadModels(appVersion) {
-  const userModels = appVersion.get('modelHashesById');
+  const userModelHashes = appVersion.get('modelInfoById').map(info => info.get('contentHash'));
   const orgId = appVersion.get('orgId');
   const projectId = appVersion.get('projectId');
   const author = appVersion.get('author');
 
-  if ( !userModels || userModels.isEmpty() ) {
+  if ( !userModelHashes || userModelHashes.isEmpty() ) {
     return Promise.resolve(new List());
   }
 
   return Promise.all(
-    userModels.valueSeq().map(
+    userModelHashes.valueSeq().map(
       persistence.userAppVersions.getModel.bind(null, orgId, projectId, author)
     )
   );
@@ -111,9 +98,13 @@ export function save(appVersion, model, presenter) {
     });
 
     persistence.userAppVersions.saveAppVersion(appVersion, model, presenter)
-      .then(() => {
+      .then(userAppVersions => {
         dispatch({
-          type: APP_SAVING_COMPLETED
+          type: APP_SAVING_COMPLETED,
+          userAppVersions,
+          appVersion: userAppVersions.get(appVersion.get('name')),
+          model,
+          presenter
         });
       }).catch(error => {
         dispatch({
@@ -143,7 +134,7 @@ export function importSheet(spreadsheetId) {
         model
       });
     }).catch(err => {
-      if ( err.status === 401 ) {
+      if ( err.status === 401 || err.status === 403 ) {
         firebase.auth().signOut();
         window.location = '/';
       }

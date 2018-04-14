@@ -1,4 +1,7 @@
-import { getSpreadsheet as getGoogleSheet } from './google';
+import {
+  getSpreadsheet as getGoogleSheet,
+  getSpreadsheetMeta as getGoogleSheetMeta
+} from './google';
 import sheetToModel from './sheet-to-model';
 
 export const providers = Object.freeze({
@@ -22,7 +25,12 @@ export function getModel(providerId) {
 
   switch ( provider ) {
     case providers.GOOGLE:
-      return getGoogleSheet(id).then(sheetToModel.bind(null, providerId));
+      return Promise.all([
+        getGoogleSheet(id),
+        getGoogleSheetMeta(id)
+      ]).then(([ sheet, meta ]) => (
+        sheetToModel(providerId, sheet, meta)
+      ));
     default:
       return Promise.reject(new Error('Unknown provider'));
   }

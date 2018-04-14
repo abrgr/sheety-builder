@@ -25,6 +25,10 @@ export default function userAppVersions(state = initialState, action) {
         appId: action.appId,
         userAppVersions: action.userAppVersions
       });
+    case actions.APP_SAVING_COMPLETED:
+      return state.merge({
+        userAppVersions: action.userAppVersions
+      })
     default:
       return state;
   }

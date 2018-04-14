@@ -1,6 +1,33 @@
 import { Record, Map } from 'immutable';
 import crypto from 'crypto';
-import coerce from './coerce';
+import coerce, { propCoercers } from './coerce';
+
+const ModelInfoRecord = new Record({
+  providerUrl: null,
+  monotonicVersion: null,
+  lastModifiedAt: null,
+  title: null,
+  contentHash: null
+});
+
+const modelInfoCoercer = coerce.bind(null, new Map({
+  providerUrl: propCoercers.nullableString,
+  monotonicVersion: propCoercers.nullableNumber,
+  lastModifiedAt: propCoercers.nullableDate,
+  title: propCoercers.nullableString,
+  contentHash: propCoercers.nullableString
+}));
+
+class ModelInfo extends ModelInfoRecord {
+  constructor(props) {
+    super(modelInfoCoercer(props || {}));
+  }
+
+  toNetworkRepresentation() {
+    const lastModifiedAt = this.get('lastModifiedAt');
+    return new Map(this).set('lastModifiedAt', lastModifiedAt ? lastModifiedAt.getTime() : null);
+  }
+}
 
 const AppVersionRecord = new Record({
   orgId: null,
@@ -11,21 +38,21 @@ const AppVersionRecord = new Record({
   createdAt: null,
   description: null,
   base: null,
-  modelHashesById: new Map(),
+  modelInfoById: new Map(),
   presenterHash: null
 });
 
 const coercer = coerce.bind(null, new Map({
-  orgId: (orgId) => orgId ? '' + orgId : null,
-  projectId: (projectId) => projectId ? '' + projectId : null,
-  appId: (appId) => appId ? '' + appId : null,
-  name: (name) => name ? '' + name : null,
-  author: (author) => author ? '' + author : null,
-  createdAt: (createdAt) => createdAt ? new Date(createdAt) : null,
-  description: (description) => description ? '' + description : null,
-  base: (base) => base ? new AppVersion(base) : null,
-  modelHashesById: (modelHashesById) => new Map(modelHashesById ? modelHashesById : null),
-  presenterHash: (presenterHash) => presenterHash ? '' + presenterHash : null
+  orgId: propCoercers.nullableString,
+  projectId: propCoercers.nullableString,
+  appId: propCoercers.nullableString,
+  name: propCoercers.nullableString,
+  author: propCoercers.nullableString,
+  createdAt: propCoercers.nullableDate,
+  description: propCoercers.nullableString,
+  base: (val) => propCoercers.nullableObjOfType(AppVersion)(val),
+  modelInfoById: propCoercers.mapOfType(ModelInfo),
+  presenterHash: propCoercers.nullableString
 }));
 
 export default class AppVersion extends AppVersionRecord {
@@ -33,24 +60,13 @@ export default class AppVersion extends AppVersionRecord {
     super(coercer(props || {}));
   }
 
-  setModelJSON(id, modelJSON) {
-    return this.setIn(['modelHashesById', id], hash(modelJSON));
+  setModelJSON(id, modelJSON, model) {
+    const modelInfo = new ModelInfo(model).set('contentHash', hash(modelJSON));
+    return this.setIn(['modelInfoById', id], modelInfo);
   }
 
   setPresenterJSON(presenterJSON) {
     return this.set('presenterHash', hash(presenterJSON));
-  }
-
-  isFromScratch() {
-     return this.get('base') === null;
-  }
-
-  hasOwnChanges() {
-    const modelHashesById = this.get('modelHashesById');
-    const hasModelChanges = !!modelHashesById && !modelHashesById.isEmpty();
-    const hasPresenterChanges = !!this.get('presenterHash');
-
-    return hasModelChanges || hasPresenterChanges;
   }
 
   isLegitimateChildOf(possibleProgenitor) {
@@ -71,7 +87,10 @@ export default class AppVersion extends AppVersionRecord {
     const createdAt = this.get('createdAt');
     const base = this.get('base');
     const networkRep = new Map(this).set('createdAt', createdAt ? createdAt.getTime() : null)
-                                    .set('base', base ? base.toNetworkRepresentation() : null);
+                                    .set('base', base ? base.toNetworkRepresentation() : null)
+                                    .update('modelInfoById', modelInfoById => (
+                                      modelInfoById.map(modelInfo => modelInfo.toNetworkRepresentation())
+                                    ));
 
     return networkRep.toJS();
   }

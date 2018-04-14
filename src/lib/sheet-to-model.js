@@ -3,7 +3,7 @@ import { List } from 'immutable';
 
 const funcsToIgnore = /IntrinioDataPoint/i;
 
-export default function sheetToModel(providerId, spreadsheet) {
+export default function sheetToModel(providerId, spreadsheet, meta) {
   const { properties } = spreadsheet;
   const { defaultFormat, title } = properties;
   const tabs = List(spreadsheet.sheets).filter((sheet) => (
@@ -49,6 +49,8 @@ export default function sheetToModel(providerId, spreadsheet) {
   return new Sheet({
     providerId,
     providerUrl: spreadsheet.spreadsheetUrl,
+    monotonicVersion: meta.version,
+    lastModifiedAt: meta.modifiedTime,
     title,
     tabs
   });
