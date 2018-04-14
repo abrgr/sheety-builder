@@ -18,7 +18,7 @@ export default class Nav extends Component {
   }
 
   render() {
-    const { rightMenuItems, leftMenuItems, title, displayName, email, photoURL } = this.props;
+    const { status, rightMenuItems, leftMenuItems, title, displayName, email, photoURL } = this.props;
     const { isMainMenuOpen } = this.state
 
     return (
@@ -29,6 +29,15 @@ export default class Nav extends Component {
           showMenuIconButton={!!leftMenuItems && !!leftMenuItems.length}
           iconElementRight={(
             <div>
+              {status
+                ? (
+                  <span
+                    style={{
+                      color: white
+                    }}>
+                    {status}
+                  </span>
+                ) : null}
               {!!photoURL
                 ? (
                   <Avatar

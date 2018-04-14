@@ -1,6 +1,6 @@
 import { fromJS, Map } from 'immutable';
 import firebase from '../firebase';
-import { AppVersion } from '../models';
+import { Project, AppVersion } from '../models';
 
 const db = firebase.firestore();
 const storage = firebase.storage();
@@ -106,10 +106,14 @@ export default getUid => ({
       appId,
       appVersion: appVersion.toNetworkRepresentation(),
       destinationBranchName
-    }).then(() => {
-
+    }).then(response => {
+      const { data } = response;
+      if ( !data.success || !data.project ) {
+        throw new Error('Failed to share project');
+      }
+      return new Project(data.project);
     }).catch(err => {
-
+      console.error('error', err);
     });
   }
 })

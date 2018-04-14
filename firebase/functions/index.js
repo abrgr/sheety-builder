@@ -14,8 +14,9 @@ exports.shareAppVersion = functions.https.onCall((data, context) => {
     return Promise.reject(new functions.https.HttpsError('invalid-argument'));
   }
 
-  return shareAppVersion(orgId, projectId, appId, appVersion, destinationBranchName, uid).then(() => ({
-    success: true
+  return shareAppVersion(orgId, projectId, appId, appVersion, destinationBranchName, uid).then(project => ({
+    success: true,
+    project
   }));
 });
 
@@ -77,7 +78,7 @@ function shareAppVersion(orgId, projectId, appId, appVersion, destinationBranchN
       delete dbAppVersion[appVersion.name];
       txn.set(userAppVersionRef, dbAppVersion);
 
-      return null;
+      return project;
     });
   });
 
@@ -85,7 +86,7 @@ function shareAppVersion(orgId, projectId, appId, appVersion, destinationBranchN
     shareModelsPromise,
     sharePresentersPromise,
     txnPromise
-  ]);
+  ]).then(([_1, _2, project]) => project);
 }
 
 function indexOf(array, test) {

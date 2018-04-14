@@ -28,7 +28,12 @@ export default function userAppVersions(state = initialState, action) {
     case actions.APP_SAVING_COMPLETED:
       return state.merge({
         userAppVersions: action.userAppVersions
-      })
+      });
+    case actions.RECEIVED_SHARE_APP_VERSION:
+      // after a version is shared, we delete the local copy
+      return state.update('userAppVersions', userAppVersions => (
+        userAppVersions.delete(action.appVersion.get('name'))
+      ));
     default:
       return state;
   }

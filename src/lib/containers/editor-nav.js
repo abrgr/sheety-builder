@@ -14,7 +14,7 @@ import { editorRoutes, projectRoutes, appRoutes } from '../routes';
 
 class EditorNav extends Component {
   render() {
-    const { app, project, appVersion, match, displayName, email, photoURL, isLoading } = this.props;
+    const { app, project, appVersion, match, displayName, email, photoURL, isLoading, isSaving, saveError } = this.props;
     const page = match && match.params.page;
     const orgPrefix = app.get('orgName')
                     ? (app.get('orgName') + ' > ')
@@ -32,6 +32,14 @@ class EditorNav extends Component {
         displayName={displayName}
         email={email}
         photoURL={photoURL}
+        status={
+          isSaving
+            ? 'Saving...'
+            : (
+              saveError
+                ? 'Failed to save'
+                : ''
+            )}
         rightMenuItems={[
           <MenuItem
             key="save"
@@ -121,6 +129,8 @@ class EditorNav extends Component {
 export default withRouter(
   connect(
     ({ auth, project, editor }) => ({
+      isSaving: editor.get('isSaving'),
+      saveError: editor.get('saveError'),
       isLoading: project.get('isLoading') || editor.get('isLoading'),
       project: project.get('project'),
       app: editor.get('app'),

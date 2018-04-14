@@ -1,5 +1,6 @@
 import { Record, List } from 'immutable';
 import * as actions from '../actions';
+import { Project } from '../models';
 
 const initialState = new Record({
   isLoading: false,
@@ -19,6 +20,14 @@ export default function projects(state = initialState, action) {
         projects: action.projects,
         invitations: action.invitations
       });
+    case actions.RECEIVED_SHARE_APP_VERSION:
+      return state.update('projects', projects => (
+        projects.map(project => (
+          project.get('id') === action.project.get('id')
+            ? new Project(action.project)
+            : project
+        ))
+      ));
     case actions.RECEIVED_SAVE_PROJECT:
       // add any new projects to our list
       const projects = state.projects || new List();

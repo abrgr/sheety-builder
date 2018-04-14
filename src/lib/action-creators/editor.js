@@ -15,7 +15,10 @@ import {
   RECEIVED_IMPORT_ERROR,
   SET_LINK_PATH,
   CLEAR_LINK_PATH,
-  SET_SHOW_SHARE_VERSION_DIALOG
+  SET_SHOW_SHARE_VERSION_DIALOG,
+  REQUESTED_SHARE_APP_VERSION,
+  RECEIVED_SHARE_APP_VERSION,
+  ERRORED_SHARE_APP_VERSION
 } from '../actions';
 import * as persistence from '../persistence';
 import firebase from '../firebase';
@@ -168,9 +171,22 @@ export function setApp(app) {
 }
 
 export function shareAppVersion(appVersion, versionToPublish) {
-  // TODO
   return dispatch => {
-    return persistence.userAppVersions.shareAppVersion(appVersion, versionToPublish);
+    dispatch({
+      type: REQUESTED_SHARE_APP_VERSION
+    });
+
+    return persistence.userAppVersions.shareAppVersion(appVersion, versionToPublish).then(project => {
+      dispatch({
+        type: RECEIVED_SHARE_APP_VERSION,
+        appVersion,
+        project
+      });
+    }).catch(err => {
+      dispatch({
+        type: ERRORED_SHARE_APP_VERSION
+      })
+    });
   };
 }
 

@@ -11,8 +11,10 @@ const initialState = new Record({
   linkPath: null,
   presentersByType: new Map(),
   isLoading: false,
+  isSaving: false,
   model: null,
   error: null,
+  saveError: null,
   calc: null,
   showShareVersionDialog: false
 })();
@@ -21,6 +23,23 @@ export default function editor(state = initialState, action) {
   switch ( action.type ) {
     case actions.SET_APP:
       return state.set('app', new App(action.app));
+    case actions.REQUESTED_SHARE_APP_VERSION:
+      return state.merge({
+        isSaving: true
+      });
+    case actions.RECEIVED_SHARE_APP_VERSION:
+      return state.merge({
+        isSaving: false,
+        saveError: null,
+        app: action.project.get('apps').find(app => (
+          app.get('id') === action.appVersion.get('appId')
+        ))
+      });
+    case actions.ERRORED_SHARE_APP_VERSION:
+      return state.merge({
+        isSaving: false,
+        saveError: action.error
+      });
     case actions.REQUESTED_APP_VERSION:
       return state.set('isLoading', true);
     case actions.RECEIVED_APP_VERSION:
@@ -37,13 +56,23 @@ export default function editor(state = initialState, action) {
         isLoading: false,
         error: action.error
       });
+    case actions.APP_SAVING_INITIATED:
+      return state.merge({
+        isSaving: true
+      });
     case actions.APP_SAVING_COMPLETED:
       return state.merge({
         appVersion: new AppVersion(action.appVersion),
-        isLoading: false,
+        isSaving: false,
+        saveError: null,
         model: action.model,
         presenter: action.presenter,
         calc: action.model ? new Calculator(action.model) : null
+      });
+    case actions.APP_SAVING_FAILED:
+      return state.merge({
+        isSaving: false,
+        saveError: action.error
       });
     case actions.RECEIVED_SAVE_PROJECT:
       const newApp = action.project.get('apps').find(app => app.get('id') === state.app.get('id'));
