@@ -229,7 +229,6 @@ class BasicInfoEditor extends Component {
         app.getIn(['publishedVersions', selectedBaseVersion])
       )
     ).then(() => {
-      // TODO: update projects
       history.push(
         editorRoutes.default(
           orgId,

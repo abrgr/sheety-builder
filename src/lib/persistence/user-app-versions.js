@@ -6,6 +6,8 @@ const db = firebase.firestore();
 const storage = firebase.storage();
 const functions = firebase.functions();
 
+const NOT_FOUND_ERROR_CODE = 'storage/object-not-found';
+
 export default getUid => ({
   list(orgId, projectId, appId) {
     return getUid().then(uid => (
@@ -27,7 +29,9 @@ export default getUid => ({
         appId,
         name: versionName,
         description: description,
-        base: baseVersion
+        base: baseVersion,
+        modelInfoById: baseVersion ? baseVersion.get('modelInfoById') : null,
+        presenterHash: baseVersion ? baseVersion.get('presenterHash') : null
       });
 
       return saveAppVersionToFirebase(
@@ -46,7 +50,10 @@ export default getUid => ({
       uid === author
         ? getUserPresenterByHash(orgId, projectId, presenterHash, uid)
         : getPublicPresenterByHash(orgId, projectId, presenterHash)
-    ));
+    )).catch(err => {
+      console.error('oops', err);
+      throw err;
+    });
   },
 
   getModel(orgId, projectId, author, modelHash) {
@@ -112,8 +119,6 @@ export default getUid => ({
         throw new Error('Failed to share project');
       }
       return new Project(data.project);
-    }).catch(err => {
-      console.error('error', err);
     });
   }
 })
@@ -201,7 +206,13 @@ function saveAppVersionToFirebase(getUid, orgId, projectId, appId, appVersion, u
 }
 
 function getUserPresenterByHash(orgId, projectId, presenterHash, uid) {
-  return getPresenterByHash(getUserAssetPathPrefix(orgId, projectId, uid), presenterHash);
+  return getPresenterByHash(getUserAssetPathPrefix(orgId, projectId, uid), presenterHash).catch(err => {
+    if ( err.code === NOT_FOUND_ERROR_CODE ) {
+      return getPublicPresenterByHash(orgId, projectId, presenterHash);
+    }
+
+    throw err;
+  });
 }
 
 function getPublicPresenterByHash(orgId, projectId, presenterHash) {
@@ -209,7 +220,13 @@ function getPublicPresenterByHash(orgId, projectId, presenterHash) {
 }
 
 function getUserModelByHash(orgId, projectId, modelHash, uid) {
-  return getModelByHash(getUserAssetPathPrefix(orgId, projectId, uid), modelHash);
+  return getModelByHash(getUserAssetPathPrefix(orgId, projectId, uid), modelHash).catch(err => {
+    if ( err.code === NOT_FOUND_ERROR_CODE ) {
+      return getPublicModelByHash(orgId, projectId, modelHash);
+    }
+
+    throw err;
+  });
 }
 
 function getPublicModelByHash(orgId, projectId, modelHash) {
