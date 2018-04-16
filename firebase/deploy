@@ -1,4 +1,10 @@
 #!/bin/bash -e
 
+readonly auth_token="$(docker-compose run --rm firebase-cli firebase functions:config:get tenant_environment.auth_token)"
+if [ "${auth_token}" == "" ]; then
+  echo "Get a ci token with 'firebase login:ci' and set the function config with 'firebase functions:config:set tenant_environment.auth_token=<your token>'"
+  exit 1
+fi
+
 docker-compose run --rm gsutil gsutil cors set storage-cors.json gs://sheety-builder.appspot.com
 docker-compose run --rm firebase-cli firebase deploy

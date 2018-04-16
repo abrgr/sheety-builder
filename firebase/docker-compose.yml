@@ -4,6 +4,7 @@ services:
     image: firebase-cli
     build:
       context: .
+      dockerfile: Dockerfile-firebase
     working_dir: "/app"
     ports:
      - "3000:3000"
@@ -14,6 +15,9 @@ services:
     network_mode: "bridge"
   gsutil:
     image: google/cloud-sdk:alpine
+    build:
+      context: .
+      dockerfile: Dockerfile-gcloud
     volumes:
      - ".:/app"
      - ".config:/root/.config"
