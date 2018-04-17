@@ -1,6 +1,6 @@
 const functions = require('firebase-functions');
 const shareAppVersion = require('./share-app-version');
-const publishAppVersion = require('./publish-app-version');
+const publishProjectApps = require('./publish-project-apps');
 const addAvailableFirebaseProject = require('./add-available-firebase-project');
 
 exports.shareAppVersion = functions.https.onCall((data, context) => {
@@ -15,17 +15,21 @@ exports.shareAppVersion = functions.https.onCall((data, context) => {
     success: true,
     project
   })).catch(err => {
-    console.error("FAILURE", err, err.message, err.stack);
+    console.error(
+      "Failed to share app version [org: %s, project: %s, app: %s, appVersion: %s, destinationBranchName: %s]",
+      orgId, projectId, appId, appVersion && appVersion.name, destinationBranchName, err, appVersion
+    );
+
+    throw err;
   });
 });
 
-exports.publishAppVersion = functions.https.onCall((data, context) => {
-  try {
-    return publishAppVersion(data.appVersion);
-  } catch ( err ) {
-    console.error('Failed!', err);
-    return Promise.reject(new Error('oops'));
-  }
+exports.publishProjectApps = functions.https.onCall((data, context) => {
+  const { orgId, projectId } = data;
+  return publishProjectApps(orgId, projectId).catch(err => {
+    console.error('Failed to publish project %s-%s', orgId, projectId, err);
+    throw err;
+  });
 });
 
 exports.addAvailableFirebaseProject = functions.https.onCall((data, context) => {
