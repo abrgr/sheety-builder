@@ -42,7 +42,7 @@ module.exports = function shareAppVersion(orgId, projectId, appId, appVersion, d
       if ( idx < 0 ) {
         throw new functions.https.HttpsError('not-found');
       }
-      const currentVersion = project.apps[idx].publishedVersions[destinationBranchName];
+      const currentVersion = project.apps[idx].sharedVersions[destinationBranchName];
       if ( currentVersion ) {
         // TODO: check that appVersion extends destinationBranchName
         const extendsCurrent = false;
@@ -51,8 +51,8 @@ module.exports = function shareAppVersion(orgId, projectId, appId, appVersion, d
         }
       }
 
-      // publish the version
-      project.apps[idx].publishedVersions[destinationBranchName] = appVersion;
+      // share the version
+      project.apps[idx].sharedVersions[destinationBranchName] = appVersion;
       txn.set(projectRef, project);
 
       // we delete the local branch after pushing to the remote

@@ -28,12 +28,12 @@ class ShareVersionDialog extends Component {
       partialDestinationBranchName
     } = this.state;
 
-    const publishedVersions = app.get('publishedVersions');
+    const sharedVersions = app.get('sharedVersions');
 
-    const newDestinations = !partialDestinationBranchName || publishedVersions.has(partialDestinationBranchName)
+    const newDestinations = !partialDestinationBranchName || sharedVersions.has(partialDestinationBranchName)
                           ? []
                           : [partialDestinationBranchName];
-    const destinations = publishedVersions.keySeq().map(name => ({
+    const destinations = sharedVersions.keySeq().map(name => ({
       label: name,
       value: name
     })).toJS().concat(newDestinations.map(name => ({
@@ -84,7 +84,7 @@ class ShareVersionDialog extends Component {
             dataSource={destinations} />
           <p>
             {!!destinationBranchName
-              ? (publishedVersions.get(destinationBranchName)
+              ? (sharedVersions.get(destinationBranchName)
                   ? `Sharing to existing name, "${destinationBranchName}"`
                   : `Sharing to new name, "${destinationBranchName}"`)
               : null}

@@ -1,6 +1,6 @@
 import { Record, Map } from 'immutable';
 import AppVersion from './app-version';
-import coerce from './coerce';
+import coerce, { propCoercers } from './coerce';
 
 const Platforms = Object.freeze({
   WEB: 'Web',
@@ -15,15 +15,17 @@ const AppRecord = new Record({
   name: '',
   platform: null,
   iconURL: null,
-  publishedVersions: new Map()
+  sharedVersions: new Map(),
+  liveVersion: null
 });
 
 const coercer = coerce.bind(null, new Map({
-  id: id => !!id ? '' + id : null,
-  name: name => !!name ? '' + name : null,
-  platform: platform => !!platform ? '' + platform : null,
-  iconURL: iconURL => iconURL ? '' + iconURL : null,
-  publishedVersions: publishedVersions => new Map(publishedVersions).map(v => new AppVersion(v))
+  id: propCoercers.nullableString,
+  name: propCoercers.nullableString,
+  platform: propCoercers.nullableString,
+  iconURL: propCoercers.nullableString,
+  sharedVersions: propCoercers.mapOfType(AppVersion),
+  liveVersion: propCoercers.nullableObjOfType(AppVersion)
 }));
 
 export default class App extends AppRecord {

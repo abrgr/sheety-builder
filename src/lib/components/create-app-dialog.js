@@ -52,6 +52,7 @@ export default class CreateAppDialog extends Component {
         autoScrollBodyContent={true}>
         <div>
           <SelectField
+            fullWidth={true}
             floatingLabelText="App type"
             value={app.get('platform')}
             onChange={(_, _1, value) => {
@@ -69,6 +70,7 @@ export default class CreateAppDialog extends Component {
         </div>
         <div>
           <TextField
+            fullWidth={true}
             floatingLabelText="App Name"
             value={app.get('name')}
             onChange={evt => {

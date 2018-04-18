@@ -100,12 +100,14 @@ class BasicInfoEditor extends Component {
           </p>
           <div>
             <TextField
+              fullWidth={true}
               floatingLabelText="Version name"
               value={versionName}
               onChange={this.onUpdateVersionName} />
           </div>
           <div>
             <TextField
+              fullWidth={true}
               floatingLabelText="Version description"
               multiLine
               value={versionDescription}
@@ -124,14 +126,14 @@ class BasicInfoEditor extends Component {
               }}
               onClick={this.onSelectBaseVersion.bind(null, BLANK_VERSION_NAME)}
               title='Start from scratch' />
-            {app.publishedVersions.entrySeq().map(([publishedVersionName, publishedVersion]) => (
+            {app.get('sharedVersions').entrySeq().map(([sharedVersionName, sharedVersion]) => (
               <GridTile
-                key={publishedVersionName}
+                key={sharedVersionName}
                 style={{
-                  backgroundColor: publishedVersionName === selectedBaseVersion ? lightBlue400 : undefined
+                  backgroundColor: sharedVersionName === selectedBaseVersion ? lightBlue400 : undefined
                 }}
-                onClick={this.onSelectBaseVersion.bind(null, publishedVersionName)}
-                title={publishedVersionName} />
+                onClick={this.onSelectBaseVersion.bind(null, sharedVersionName)}
+                title={sharedVersionName} />
             ))}
           </GridList>
         </Dialog>
@@ -226,7 +228,7 @@ class BasicInfoEditor extends Component {
         appId,
         versionName,
         versionDescription,
-        app.getIn(['publishedVersions', selectedBaseVersion])
+        app.getIn(['sharedVersions', selectedBaseVersion])
       )
     ).then(() => {
       history.push(

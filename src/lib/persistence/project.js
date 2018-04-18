@@ -120,8 +120,20 @@ export default getUid => ({
           Promise.all(
             projects.map(project => (
               this.load(project.orgId, project.id)
+                  .catch(err => {
+                    if ( err.code === 'permission-denied' ) {
+                      // TODO: show a phantom project or something
+                      // This indicates that the project was deleted or this user was removed from the readers
+                      // group and the change was not propagated to the user-config
+                      return null;
+                    }
+
+                    throw err;
+                  })
             ))
           )
+        )).then(projects => (
+          projects.filter(p => !!p)
         ))
     ));
   },

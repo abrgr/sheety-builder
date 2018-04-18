@@ -71,6 +71,7 @@ class ProjectList extends Component {
           onRequestClose={this.onCloseCreateProjectDialog}
           autoScrollBodyContent={true}>
           <TextField
+            fullWidth={true}
             floatingLabelText="Project name"
             value={projectName}
             onChange={(evt) => {
