@@ -4,6 +4,7 @@ import { withRouter } from 'react-router';
 import Dialog from 'material-ui/Dialog';
 import AutoComplete from 'material-ui/AutoComplete';
 import FlatButton from 'material-ui/FlatButton';
+import CircularProgress from 'material-ui/CircularProgress';
 import { editorActions } from '../action-creators';
 import { appRoutes } from '../routes';
 
@@ -20,7 +21,8 @@ class ShareVersionDialog extends Component {
   render() {
     const {
       showShareVersionDialog,
-      app
+      app,
+      isSaving
     } = this.props;
 
     const {
@@ -54,6 +56,11 @@ class ShareVersionDialog extends Component {
             <FlatButton
               label="Share"
               primary={true}
+              icon={isSaving
+                     ? (
+                       <CircularProgress
+                         mode="indeterminate" />
+                     ) : null}
               disabled={!destinationBranchName}
               onClick={this.onShare.bind(null, destinationBranchName)} />
           )
@@ -124,6 +131,9 @@ class ShareVersionDialog extends Component {
       );
 
       this.onRequestClose();
+    }).catch(err => {
+      // TODO: handle the error based on the code
+      console.error(err.code);
     });
   }
 }
@@ -133,7 +143,8 @@ export default withRouter(
     ({ editor }) => ({
       showShareVersionDialog: editor.get('showShareVersionDialog'),
       app: editor.get('app'),
-      appVersion: editor.get('appVersion')
+      appVersion: editor.get('appVersion'),
+      isSaving: editor.get('isSaving')
     })
   )(ShareVersionDialog)
 );

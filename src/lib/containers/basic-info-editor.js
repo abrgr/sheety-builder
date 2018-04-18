@@ -10,6 +10,7 @@ import IconButton from 'material-ui/IconButton';
 import CreateImg from 'material-ui/svg-icons/content/add-circle';
 import OpenImg from 'material-ui/svg-icons/action/open-in-new';
 import { lightBlue400 } from 'material-ui/styles/colors';
+import CircularProgress from 'material-ui/CircularProgress';
 import Loader from '../components/loader';
 import ErrorMsg from '../components/error-msg';
 import { userAppVersionsActions, projectActions } from '../action-creators';
@@ -82,6 +83,11 @@ class BasicInfoEditor extends Component {
               <FlatButton
                 label="Create"
                 primary={true}
+                icon={isLoading
+                       ? (
+                         <CircularProgress
+                            mode='indeterminate' />
+                       ) : null}
                 onClick={this.onCreateNewVersion} />
             )
           ]}

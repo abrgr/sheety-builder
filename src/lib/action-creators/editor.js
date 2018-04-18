@@ -185,7 +185,9 @@ export function shareAppVersion(appVersion, versionToPublish) {
     }).catch(err => {
       dispatch({
         type: ERRORED_SHARE_APP_VERSION
-      })
+      });
+
+      throw err;
     });
   };
 }
