@@ -3,12 +3,14 @@ import { connect } from 'react-redux';
 import { withRouter } from 'react-router';
 import TextField from 'material-ui/TextField';
 import FlatButton from 'material-ui/FlatButton';
+import RaisedButton from 'material-ui/RaisedButton';
 import Dialog from 'material-ui/Dialog';
 import Paper from 'material-ui/Paper';
 import { GridList, GridTile } from 'material-ui/GridList';
 import IconButton from 'material-ui/IconButton';
 import CreateImg from 'material-ui/svg-icons/content/add-circle';
 import OpenImg from 'material-ui/svg-icons/action/open-in-new';
+import DeployImg from 'material-ui/svg-icons/communication/present-to-all';
 import { lightBlue400 } from 'material-ui/styles/colors';
 import CircularProgress from 'material-ui/CircularProgress';
 import Loader from '../components/loader';
@@ -56,17 +58,29 @@ class BasicInfoEditor extends Component {
       showNewVersionDialog: false,
       versionName: '',
       versionDescription: '',
-      selectedBaseVersion: null
+      selectedBaseVersion: null,
+      showPublishDialog: false,
+      versionNameToPublish: null
     };
   }
 
   render() {
-    const { app, error, isLoading, userAppVersions } = this.props;
+    const {
+      app,
+      error,
+      isLoading,
+      userAppVersions,
+      isPublishing,
+      publishError
+    } = this.props;
+
     const {
       showNewVersionDialog,
       versionName,
       versionDescription,
-      selectedBaseVersion
+      selectedBaseVersion,
+      showPublishDialog,
+      versionNameToPublish,
     } = this.state;
 
     return (
@@ -143,15 +157,78 @@ class BasicInfoEditor extends Component {
             ))}
           </GridList>
         </Dialog>
+        <Dialog
+          title='Publish app'
+          actions={[
+            (
+              <FlatButton
+                label="Cancel"
+                onClick={this.onClosePublishDialog} />
+            ),
+            (
+              <FlatButton
+                label="Publish"
+                disabled={!versionNameToPublish}
+                primary={true}
+                icon={<DeployImg />}
+                onClick={this.onPublish} />
+            )
+          ]}
+          open={showPublishDialog}
+          onRequestClose={this.onClosePublishDialog}
+          autoScrollBodyContent={true}>
+          <p>
+            Publish a new version of your app.
+          </p>
+          {isPublishing
+            ? (
+              <div>
+                <strong>Publishing...</strong>
+                <Loader />
+              </div>
+            ) : (
+              <div>
+                {publishError
+                  ? (
+                    <p>Sorry, failed to publish your app.</p>
+                  ) : null}
+                <GridList
+                  style={{
+                    display: 'flex',
+                    flexWrap: 'nowrap',
+                    overflowX: 'auto'
+                  }}>
+                  {app.get('sharedVersions').entrySeq().map(([name, appVersion]) => (
+                    <GridTile
+                      key={name}
+                      style={{
+                        backgroundColor: versionNameToPublish === name ? lightBlue400 : undefined
+                      }}
+                      onClick={this.onSelectVersionToPublish.bind(null, name)}
+                      title={`Publish ${name}`} />
+                  ))}
+                </GridList>
+              </div>
+            )}
+        </Dialog>
         <Paper
           style={{ padding: 20 }}>
           <p>
             You're ready to make an app!
           </p>
           <TextField
+            fullWidth
             floatingLabelText="App Name"
-            value={app.get('name')}
+            value={app.get('name', '')}
             onChange={this.onUpdateAppName} />
+          {app.platformInfo().get('hasWebRoot')
+            ? (
+              <TextField
+                fullWidth
+                floatingLabelText="Web Root"
+                value={app.get('webRoot') || ''}
+                onChange={this.onUpdateWebRoot} />
+            ) : null}
           {!!error
             ? (
               <ErrorMsg
@@ -161,6 +238,22 @@ class BasicInfoEditor extends Component {
             ? (
               <Loader />
             ) : null}
+          <h2>Current Deployment</h2>
+          {app.get('liveVersion')
+            ? (
+              <p>
+                {app.getIn(['liveVersion', 'appVersion', 'name'])} last deployed on {app.getIn(['liveVersion', 'initiatedAt']).toLocaleString()}
+              </p>
+            ) : (
+              <p>
+                You haven't deployed this app yet.
+              </p>
+            )}
+          <RaisedButton
+            label="Publish"
+            primary
+            icon={<DeployImg color="white" />}
+            onClick={this.onShowPublishDialog} />
           <InProgressItems
             onEditVersion={this.onEditVersion}
             userAppVersions={userAppVersions} />
@@ -210,6 +303,21 @@ class BasicInfoEditor extends Component {
     );
   };
 
+  onUpdateWebRoot= evt => {
+    const {
+      dispatch,
+      app,
+      project
+    } = this.props;
+
+    dispatch(
+      projectActions.saveApp(
+        project,
+        app.set('webRoot', evt.target.value)
+      )
+    );
+  };
+
   onUpdateVersionName = evt => {
     this.setState({
       versionName: evt.target.value
@@ -248,14 +356,48 @@ class BasicInfoEditor extends Component {
     });
   };
 
-  onEditVersion = appVersionId => {
+  onEditVersion = appVersionName => {
     const { history, match } = this.props;
 
     history.push(
-      editorRoutes.default(match.params.orgId, match.params.projectId, match.params.appId, appVersionId)
+      editorRoutes.default(match.params.orgId, match.params.projectId, match.params.appId, appVersionName)
     );
   };
-}
+
+  onShowPublishDialog = () => {
+    this.setState({
+      showPublishDialog: true
+    });
+  };
+
+  onClosePublishDialog = () => {
+    this.setState({
+      showPublishDialog: false
+    });
+  };
+
+  onSelectVersionToPublish = versionNameToPublish => {
+    this.setState({
+      versionNameToPublish
+    });
+  };
+
+  onPublish = () => {
+    const { dispatch, project, app } = this.props;
+    const { versionNameToPublish } = this.state;
+
+    dispatch(
+      userAppVersionsActions.publish(
+        project.get('orgId'),
+        project.get('id'),
+        app.get('id'),
+        app.getIn(['sharedVersions', versionNameToPublish, 'versionId'])
+      )
+    ).then(() => {
+      this.onClosePublishDialog();
+    });
+  };
+};
 
 export default withRouter(
   connect(
@@ -264,7 +406,9 @@ export default withRouter(
       app: editor.get('app'),
       isLoading: userAppVersions.get('isLoading'),
       error: userAppVersions.get('error'),
-      userAppVersions: userAppVersions.get('userAppVersions')
+      userAppVersions: userAppVersions.get('userAppVersions'),
+      isPublishing: userAppVersions.get('isPublishing'),
+      publishError: userAppVersions.get('publishError')
     })
   )(BasicInfoEditor)
 );

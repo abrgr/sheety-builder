@@ -5,7 +5,9 @@ const initialState = new Record({
   isLoading: false,
   error: null,
   appId: null,
-  userAppVersions: null
+  userAppVersions: null,
+  isPublishing: false,
+  publishError: null
 })();
 
 export default function userAppVersions(state = initialState, action) {
@@ -34,6 +36,21 @@ export default function userAppVersions(state = initialState, action) {
       return state.update('userAppVersions', userAppVersions => (
         userAppVersions.delete(action.appVersion.get('name'))
       ));
+    case actions.REQUESTED_PUBLISH:
+      return state.merge({
+        isPublishing: true,
+        publishError: null
+      });
+    case actions.RECEIVED_PUBLISH:
+      return state.merge({
+        isPublishing: false,
+        publishError: null
+      });
+    case actions.ERRORED_PUBLISH:
+      return state.merge({
+        isPublishing: false,
+        publishError: action.error
+      });
     default:
       return state;
   }

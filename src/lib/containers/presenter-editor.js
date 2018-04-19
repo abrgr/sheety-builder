@@ -20,12 +20,12 @@ class PresenterEditor extends Component {
       isLoading,
       error,
       calc,
-      presenter,
       presentersByType,
       editingPresenterPath,
       linkPath,
       dispatch
     } = this.props;
+    const presenter = this.props.presenter || new Map();
 
     if ( isLoading ) {
       return (

@@ -4,11 +4,13 @@ const fs = require('fs');
 const rimraf = require('rimraf');
 const firebaseTools = require('firebase-tools');
 const functions = require('firebase-functions');
-const { db, storage } = require('./firebase');
+const { db, bucket } = require('./firebase');
 
-module.exports = function publishProjectApps(orgId, projectId) {
+// TODO: block simultaneous deploys
+module.exports = function publishProjectApp(orgId, projectId, appId, versionId) {
   if ( !orgId || !orgId.length || typeof orgId !== 'string'
       || !projectId || !projectId.length || typeof projectId !== 'string'
+      || !versionId || !versionId.length || typeof versionId !== 'string'
       || projectId === getCurrentProjectId() ) {
     console.error('Bad org [%s] or project [%s] id', orgId, projectId);
     return Promise.reject(new functions.https.HttpsError('unauthenticated'));
@@ -21,17 +23,40 @@ module.exports = function publishProjectApps(orgId, projectId) {
     return Promise.reject(new functions.https.HttpsError('internal'));
   }
 
+  let projectDir = null;
+
   return Promise.all([
     getProject(orgId, projectId),
     getProjectSettings(orgId, projectId)
   ]).then(([project, settings]) => {
     const firebaseProjectId = settings.firebaseProjectId;
     if ( !firebaseProjectId ) {
-      console.log('No firebase project id setup for %s', projectId, settings);
+      console.warn('No firebase project id setup for %s-%s', orgId, projectId, settings);
       throw new functions.https.HttpsError('unauthenticated');
     }
 
-    const projectDir = getProjectDir(firebaseProjectId);
+    const appIdx = project.apps.findIndex(app => app.id === appId);
+    if ( appIdx < 0 ) {
+      console.warn('No such app %s for project %s-%s', appId, orgId, projectId);
+      throw new functions.https.HttpsError('not-found');
+    }
+
+    const app = project.apps[appIdx];
+    const appVersionName = Object.keys(app.sharedVersions)
+      .find(versionName => app.sharedVersions[versionName].versionId === versionId);
+    if ( !appVersionName ) {
+      console.warn('No such appVersion %s for project %s-%s and app %s', versionId, orgId, projectId, appId);
+      throw new functions.https.HttpsError('not-found');
+    }
+
+    const appVersion = app.sharedVersions[appVersionName];
+
+    project.apps[appIdx].liveVersion = appVersion;
+    console.log('Deploying app version %s for project %s-%s and app %s', versionId, orgId, projectId, appId);
+
+    // TODO: save the project and save the previously-deployed app version to a deployment log
+
+    projectDir = getProjectDir(firebaseProjectId);
 
     writeFirebaseJson(projectDir, project);
     writeFirestoreRules(projectDir);
@@ -39,6 +64,8 @@ module.exports = function publishProjectApps(orgId, projectId) {
     writeStorageRules(projectDir);
 
     return Promise.all([
+      originalProject,
+      project,
       firebaseProjectId,
       projectDir,
       writePublicDir(projectDir, project)
@@ -55,12 +82,15 @@ module.exports = function publishProjectApps(orgId, projectId) {
     return null;
   }).catch(err => {
     console.error('Deployment failed!', err);
+    if ( projectDir ) {
+      rimraf.sync(projectDir, { disableGlob: true });
+    }
     throw err;
   });
 }
 
 function getProject(orgId, projectId) {
-  return db.doc(`organizations/${orgId}/projects/${projectId}`)
+  return db.doc(`orgs/${orgId}/projects/${projectId}`)
            .get()
            .then(projectDoc => {
              if ( !projectDoc.exists )  {
@@ -140,7 +170,7 @@ function writePublicDir(projectDir, project) {
 
   const appTemplatePath = path.join(__dirname, 'templates', 'app');
 
-  // copy static assets
+  // copy static assets and fill in templated assets
   const staticPath = path.join(appTemplatePath, 'static');
   const staticAssets = fs.readdirSync(staticPath);
   const jsAssets = staticAssets.filter(filename => '.js' === path.extname(filename));
@@ -153,27 +183,40 @@ function writePublicDir(projectDir, project) {
   const css = cssAssets[0];
   const script = jsAssets[0];
 
-  fs.copyFileSync(path.join(staticPath, css), path.join(publicDir, css));
-  fs.copyFileSync(path.join(staticPath, script), path.join(publicDir, script));
-
-  // write templated assets
   const indexContents = fs.readFileSync(path.join(appTemplatePath, 'index.html'), { encoding: 'utf8' });
 
-  return Promise.all(
-    project.apps.map(writeIndexFile.bind(null, css, script, publicDir, project))
-  );
+  return Promise.all([
+    Promise.all(
+      // TODO: this doesn't handle sub-directories
+      staticAssets.map(staticAsset => copyFile(path.join(staticPath, staticAsset), path.join(publicDir, staticAsset)))
+    ),
+    Promise.all(
+      project.apps.map(writeIndexFile.bind(null, indexContents, css, script, publicDir, project))
+    )
+  ]);
 }
 
-function writeIndexFile(css, script, publicDir, project, app) {
-  const bucket = storage.bucket()
+function copyFile(src, dest) {
+  return new Promise((resolve, reject) => {
+    const read = fs.createReadStream(src);
+    const write = fs.createWriteStream(dest);
 
+    read.on('error', reject);
+    write.on('error', reject);
+    write.on('finish', resolve);
+
+    read.pipe(write);
+  });
+}
+
+function writeIndexFile(indexContents, css, script, publicDir, project, app) {
   // TODO: handle multiple models
   const modelIds = Object.keys(app.liveVersion.modelInfoById);
 
   return Promise.all([
     getFile(`orgs/${project.orgId}/projects/${project.id}/shared-assets/presenter-${app.liveVersion.presenterHash}`),
     getFile(`orgs/${project.orgId}/projects/${project.id}/shared-assets/model-${app.liveVersion.modelInfoById[modelIds[0]].contentHash}`)
-  ]).then((presenter, model) => {
+  ]).then(([presenter, model]) => {
     // avoid parsing big json blobs and do some string concatenation
     const data = `{"presenter":${presenter.toString('utf8')},"model":${model.toString('utf8')}}`;
 
@@ -187,7 +230,7 @@ function writeIndexFile(css, script, publicDir, project, app) {
   });
 }
 
-function getFile(bucket, key) {
+function getFile(key) {
   return new Promise((resolve, reject) => {
     bucket.file(key).download((err, contents) => {
       if ( err ) {

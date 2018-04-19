@@ -1,4 +1,5 @@
 import { fromJS, Map } from 'immutable';
+import uuid from 'uuid';
 import firebase from '../firebase';
 import { Project, AppVersion } from '../models';
 
@@ -27,6 +28,7 @@ export default getUid => ({
         orgId,
         projectId,
         appId,
+        versionId: uuid.v4(),
         name: versionName,
         description: description,
         base: baseVersion,
@@ -111,12 +113,28 @@ export default getUid => ({
       orgId,
       projectId,
       appId,
-      appVersion: appVersion.toNetworkRepresentation(),
+      appVersion: appVersion.toNetworkRepresentation().toJS(),
       destinationBranchName
     }).then(response => {
       const { data } = response;
       if ( !data.success || !data.project ) {
         throw new Error('Failed to share project');
+      }
+      return new Project(data.project);
+    });
+  },
+
+  publish(orgId, projectId, appId, versionId) {
+    const remotePublish = functions.httpsCallable('publishProjectApp');
+    return remotePublish({
+      orgId,
+      projectId,
+      appId,
+      versionId
+    }).then(response => {
+      const { data } = response;
+      if ( !data.success || !data.project ) {
+        throw new Error('Failed to publish project');
       }
       return new Project(data.project);
     });

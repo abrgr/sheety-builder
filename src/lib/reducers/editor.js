@@ -106,6 +106,8 @@ export default function editor(state = initialState, action) {
       return state.set('linkPath', null);
     case actions.SET_SHOW_SHARE_VERSION_DIALOG:
       return state.set('showShareVersionDialog', action.showShareVersionDialog);
+    case actions.RECEIVED_PUBLISH:
+      return state.set('app', action.app);
     default:
       return state;
   }

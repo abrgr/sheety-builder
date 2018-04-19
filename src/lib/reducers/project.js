@@ -28,6 +28,8 @@ export default function project(state = initialState, action) {
       return initialState.set('error', action.error);
     case actions.RECEIVED_LOAD_PROJECT:
       return initialState.set('project', action.project);
+    case actions.RECEIVED_PUBLISH:
+      return initialState.set('project', action.project);
     default:
       return state;
   }

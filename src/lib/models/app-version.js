@@ -33,6 +33,7 @@ const AppVersionRecord = new Record({
   orgId: null,
   projectId: null,
   appId: null,
+  versionId: null,
   name: null,
   author: null,
   createdAt: null,
@@ -46,6 +47,7 @@ const coercer = coerce.bind(null, new Map({
   orgId: propCoercers.nullableString,
   projectId: propCoercers.nullableString,
   appId: propCoercers.nullableString,
+  versionId: propCoercers.nullableString,
   name: propCoercers.nullableString,
   author: propCoercers.nullableString,
   createdAt: propCoercers.nullableDate,
@@ -86,13 +88,11 @@ export default class AppVersion extends AppVersionRecord {
   toNetworkRepresentation() {
     const createdAt = this.get('createdAt');
     const base = this.get('base');
-    const networkRep = new Map(this).set('createdAt', createdAt ? createdAt.getTime() : null)
-                                    .set('base', base ? base.toNetworkRepresentation() : null)
-                                    .update('modelInfoById', modelInfoById => (
-                                      modelInfoById.map(modelInfo => modelInfo.toNetworkRepresentation())
-                                    ));
-
-    return networkRep.toJS();
+    return new Map(this).set('createdAt', createdAt ? createdAt.getTime() : null)
+                        .set('base', base ? base.toNetworkRepresentation() : null)
+                        .update('modelInfoById', modelInfoById => (
+                          modelInfoById.map(modelInfo => modelInfo.toNetworkRepresentation())
+                        ));
   }
 }
 
