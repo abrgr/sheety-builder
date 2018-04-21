@@ -61,7 +61,7 @@ class ShareVersionDialog extends Component {
                        <CircularProgress
                          mode="indeterminate" />
                      ) : null}
-              disabled={!destinationBranchName}
+              disabled={!destinationBranchName || isSaving}
               onClick={this.onShare.bind(null, destinationBranchName)} />
           )
         ]}

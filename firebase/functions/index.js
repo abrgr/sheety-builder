@@ -25,10 +25,13 @@ exports.shareAppVersion = functions.https.onCall((data, context) => {
 });
 
 exports.publishProjectApp = functions.https.onCall((data, context) => {
+  const uid = context.auth.uid;
   const { orgId, projectId, appId, versionId } = data;
-  return publishProjectApp(orgId, projectId, appId, versionId).then(result => {
+  return publishProjectApp(uid, orgId, projectId, appId, versionId).then(project => {
     console.log('Published version %s for app %s in project %s-%s', versionId, appId, orgId, projectId);
-    return result;
+    return {
+      project
+    };
   }).catch(err => {
     console.error('Failed to publish version %s for app %s in project %s-%s', versionId, appId, orgId, projectId, err);
     throw err;

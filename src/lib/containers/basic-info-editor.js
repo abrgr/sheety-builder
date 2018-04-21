@@ -24,27 +24,24 @@ const InProgressItems = ({ userAppVersions, onEditVersion }) => {
   }
 
   return (
-    <div>
-      <h2>In-progress Work</h2>
-      <GridList
-        style={{
-          display: 'flex',
-          flexWrap: 'nowrap',
-          overflowX: 'auto'
-        }}>
-        {userAppVersions.entrySeq().map(([name, appVersion]) => (
-          <GridTile
-            key={name}
-            actionIcon={
-              <IconButton
-                onClick={onEditVersion.bind(null, name)}>
-                <OpenImg color="white" />
-              </IconButton>
-            }
-            title={`${name} (${appVersion.get('baseName') ? `Based on ${appVersion.get('baseName')}` : 'From scratch'})`} />
-        ))}
-      </GridList>
-    </div>
+    <GridList
+      style={{
+        display: 'flex',
+        flexWrap: 'nowrap',
+        overflowX: 'auto'
+      }}>
+      {userAppVersions.entrySeq().map(([name, appVersion]) => (
+        <GridTile
+          key={name}
+          actionIcon={
+            <IconButton
+              onClick={onEditVersion.bind(null, name)}>
+              <OpenImg color="white" />
+            </IconButton>
+          }
+          title={`${name} (${appVersion.get('baseName') ? `Based on ${appVersion.get('baseName')}` : 'From scratch'})`} />
+      ))}
+    </GridList>
   );
 };
 
@@ -82,6 +79,11 @@ class BasicInfoEditor extends Component {
       showPublishDialog,
       versionNameToPublish,
     } = this.state;
+
+    const paperStyle = {
+      padding: 20,
+      margin: 20
+    };
 
     return (
       <div>
@@ -168,7 +170,7 @@ class BasicInfoEditor extends Component {
             (
               <FlatButton
                 label="Publish"
-                disabled={!versionNameToPublish}
+                disabled={!versionNameToPublish || isPublishing}
                 primary={true}
                 icon={<DeployImg />}
                 onClick={this.onPublish} />
@@ -212,7 +214,7 @@ class BasicInfoEditor extends Component {
             )}
         </Dialog>
         <Paper
-          style={{ padding: 20 }}>
+          style={paperStyle}>
           <p>
             You're ready to make an app!
           </p>
@@ -238,11 +240,14 @@ class BasicInfoEditor extends Component {
             ? (
               <Loader />
             ) : null}
+        </Paper>
+        <Paper
+          style={paperStyle}>
           <h2>Current Deployment</h2>
           {app.get('liveVersion')
             ? (
               <p>
-                {app.getIn(['liveVersion', 'appVersion', 'name'])} last deployed on {app.getIn(['liveVersion', 'initiatedAt']).toLocaleString()}
+                <strong>{app.getIn(['liveVersion', 'appVersion', 'name'])}</strong> last deployed on {app.getIn(['liveVersion', 'initiatedAt']).toLocaleString()}
               </p>
             ) : (
               <p>
@@ -250,21 +255,23 @@ class BasicInfoEditor extends Component {
               </p>
             )}
           <RaisedButton
-            label="Publish"
+            label="Publish a new version"
             primary
             icon={<DeployImg color="white" />}
             onClick={this.onShowPublishDialog} />
+        </Paper>
+        <Paper
+          style={paperStyle}>
+          <h2>Ongoing Work</h2>
           <InProgressItems
             onEditVersion={this.onEditVersion}
             userAppVersions={userAppVersions} />
-          <Paper>
-            <FlatButton
-              label='Start working'
-              labelPosition='after'
-              onClick={this.onShowNewVersionDialog}
-              primary
-              icon={<CreateImg />} />
-          </Paper>
+          <FlatButton
+            label='Start working'
+            labelPosition='after'
+            onClick={this.onShowNewVersionDialog}
+            primary
+            icon={<CreateImg />} />
         </Paper>
       </div>
     );

@@ -7,7 +7,7 @@ const functions = require('firebase-functions');
 const { db, bucket } = require('./firebase');
 
 // TODO: block simultaneous deploys
-module.exports = function publishProjectApp(orgId, projectId, appId, versionId) {
+module.exports = function publishProjectApp(uid, orgId, projectId, appId, versionId) {
   if ( !orgId || !orgId.length || typeof orgId !== 'string'
       || !projectId || !projectId.length || typeof projectId !== 'string'
       || !versionId || !versionId.length || typeof versionId !== 'string'
@@ -35,6 +35,58 @@ module.exports = function publishProjectApp(orgId, projectId, appId, versionId) 
       throw new functions.https.HttpsError('unauthenticated');
     }
 
+    //
+    // AUTHORIZE!
+    //
+    if ( !project.admins[uid] ) {
+      throw new functions.https.HttpsError('unauthenticated');
+    }
+
+    project = setLiveAppVersion(uid, project, appId, versionId);
+    console.log('Deploying app version %s for project %s-%s and app %s', versionId, orgId, projectId, appId);
+
+    projectDir = getProjectDir(firebaseProjectId);
+
+    writeFirebaseJson(projectDir, project);
+    writeFirestoreRules(projectDir);
+    writeFirestoreIndexes(projectDir);
+    writeStorageRules(projectDir);
+
+    return Promise.all([
+      firebaseProjectId,
+      projectDir,
+      writePublicDir(projectDir, project)
+    ]);
+  }).then(([firebaseProjectId, projectDir]) => (
+    Promise.all([
+      saveProjectWithLiveVersion(uid, orgId, projectId, appId, versionId),
+      firebaseProjectId,
+      projectDir
+    ])
+  )).then(([project, firebaseProjectId, projectDir]) => (
+    Promise.all([
+      project,
+      projectDir,
+      firebaseTools.deploy({
+        project: firebaseProjectId,
+        token: token,
+        cwd: projectDir
+      })
+    ])
+  )).then(([project, projectDir]) => {
+    console.log('Deployment complete');
+    rimraf.sync(projectDir, { disableGlob: true });
+    return project;
+  }).catch(err => {
+    console.error('Deployment failed!', err);
+    if ( projectDir ) {
+      rimraf.sync(projectDir, { disableGlob: true });
+    }
+    throw err;
+  });
+}
+
+  function setLiveAppVersion(initiatedBy, project, appId, versionId) {
     const appIdx = project.apps.findIndex(app => app.id === appId);
     if ( appIdx < 0 ) {
       console.warn('No such app %s for project %s-%s', appId, orgId, projectId);
@@ -51,42 +103,25 @@ module.exports = function publishProjectApp(orgId, projectId, appId, versionId) 
 
     const appVersion = app.sharedVersions[appVersionName];
 
-    project.apps[appIdx].liveVersion = appVersion;
-    console.log('Deploying app version %s for project %s-%s and app %s', versionId, orgId, projectId, appId);
+    project.apps[appIdx].liveVersion = {
+      initiatedBy,
+      initiatedAt: Date.now(),
+      appVersion
+    };
 
-    // TODO: save the project and save the previously-deployed app version to a deployment log
+    return project;
+  }
 
-    projectDir = getProjectDir(firebaseProjectId);
-
-    writeFirebaseJson(projectDir, project);
-    writeFirestoreRules(projectDir);
-    writeFirestoreIndexes(projectDir);
-    writeStorageRules(projectDir);
-
-    return Promise.all([
-      originalProject,
-      project,
-      firebaseProjectId,
-      projectDir,
-      writePublicDir(projectDir, project)
-    ]);
-  }).then(([firebaseProjectId, projectDir]) => (
-    firebaseTools.deploy({
-      project: firebaseProjectId,
-      token: token,
-      cwd: projectDir
+function saveProjectWithLiveVersion(initiatedBy, orgId, projectId, appId, versionId) {
+  const ref = db.doc(`orgs/${orgId}/projects/${projectId}`);
+  return db.runTransaction(txn => (
+    txn.get(ref).then(doc => {
+      const project = doc.data();
+      const updatedProject = setLiveAppVersion(initiatedBy, project, appId, versionId);
+      txn.set(ref, updatedProject);
+      return updatedProject;
     })
-  )).then(() => {
-    console.log('Deployment complete');
-    rimraf.sync(projectDir, { disableGlob: true });
-    return null;
-  }).catch(err => {
-    console.error('Deployment failed!', err);
-    if ( projectDir ) {
-      rimraf.sync(projectDir, { disableGlob: true });
-    }
-    throw err;
-  });
+  ));
 }
 
 function getProject(orgId, projectId) {
@@ -211,11 +246,12 @@ function copyFile(src, dest) {
 
 function writeIndexFile(indexContents, css, script, publicDir, project, app) {
   // TODO: handle multiple models
-  const modelIds = Object.keys(app.liveVersion.modelInfoById);
+  const appVersion = app.liveVersion.appVersion;
+  const modelIds = Object.keys(appVersion.modelInfoById);
 
   return Promise.all([
-    getFile(`orgs/${project.orgId}/projects/${project.id}/shared-assets/presenter-${app.liveVersion.presenterHash}`),
-    getFile(`orgs/${project.orgId}/projects/${project.id}/shared-assets/model-${app.liveVersion.modelInfoById[modelIds[0]].contentHash}`)
+    getFile(`orgs/${project.orgId}/projects/${project.id}/shared-assets/presenter-${appVersion.presenterHash}`),
+    getFile(`orgs/${project.orgId}/projects/${project.id}/shared-assets/model-${appVersion.modelInfoById[modelIds[0]].contentHash}`)
   ]).then(([presenter, model]) => {
     // avoid parsing big json blobs and do some string concatenation
     const data = `{"presenter":${presenter.toString('utf8')},"model":${model.toString('utf8')}}`;
