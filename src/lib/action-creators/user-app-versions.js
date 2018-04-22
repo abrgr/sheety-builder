@@ -68,6 +68,8 @@ export function publish(orgId, projectId, appId, versionId) {
           type: ERRORED_PUBLISH,
           error: "Sorry, we couldn't publish the app"
         });
+
+        throw err;
       });
   };
 }

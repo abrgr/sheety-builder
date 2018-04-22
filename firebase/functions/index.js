@@ -30,6 +30,7 @@ exports.publishProjectApp = functions.https.onCall((data, context) => {
   return publishProjectApp(uid, orgId, projectId, appId, versionId).then(project => {
     console.log('Published version %s for app %s in project %s-%s', versionId, appId, orgId, projectId);
     return {
+      success: true,
       project
     };
   }).catch(err => {

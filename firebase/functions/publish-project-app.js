@@ -255,9 +255,12 @@ function writeIndexFile(indexContents, css, script, publicDir, project, app) {
   ]).then(([presenter, model]) => {
     // avoid parsing big json blobs and do some string concatenation
     const data = `{"presenter":${presenter.toString('utf8')},"model":${model.toString('utf8')}}`;
+    const dir = path.join(publicDir, app.webRoot);
+
+    fs.mkdirSync(dir);
 
     return fs.writeFileSync(
-      path.join(publicDir, 'index.html'),
+      path.join(dir, 'index.html'),
       indexContents.replace('{css}', `/${css}`)
                    .replace('{script}', `/${script}`)
                    .replace('{data}', data)
@@ -283,11 +286,16 @@ function isWebApp(app) {
 }
 
 function writeFirebaseJson(projectDir, project) {
-  const rewrites = project.apps.filter(isWebApp)
-                          .map(app => ({
-                            source: path.join(app.webRoot, '**'),
-                            destination: path.join(app.webRoot, 'index.html')
-                          }));
+  const webApps = project.apps.filter(isWebApp);
+  const rewrites = webApps.map(app => ({
+    source: path.join(app.webRoot, '**'),
+    destination: path.join(app.webRoot, 'index.html')
+  })).concat(
+    webApps.map(app => ({
+      source: app.webRoot,
+      destination: path.join(app.webRoot, 'index.html')
+    }))
+  );
 
   fs.writeFileSync(
     path.join(projectDir, 'firebase.json'),

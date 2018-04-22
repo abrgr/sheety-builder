@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import url from 'url';
 import { connect } from 'react-redux';
 import { withRouter } from 'react-router';
 import TextField from 'material-ui/TextField';
@@ -63,6 +64,7 @@ class BasicInfoEditor extends Component {
 
   render() {
     const {
+      project,
       app,
       error,
       isLoading,
@@ -192,7 +194,8 @@ class BasicInfoEditor extends Component {
               <div>
                 {publishError
                   ? (
-                    <p>Sorry, failed to publish your app.</p>
+                    <ErrorMsg
+                      msg="Sorry, failed to publish your app." />
                   ) : null}
                 <GridList
                   style={{
@@ -246,9 +249,21 @@ class BasicInfoEditor extends Component {
           <h2>Current Deployment</h2>
           {app.get('liveVersion')
             ? (
-              <p>
-                <strong>{app.getIn(['liveVersion', 'appVersion', 'name'])}</strong> last deployed on {app.getIn(['liveVersion', 'initiatedAt']).toLocaleString()}
-              </p>
+              <div>
+                <p>
+                  <strong>{app.getIn(['liveVersion', 'appVersion', 'name'])}</strong> last deployed on {app.getIn(['liveVersion', 'initiatedAt']).toLocaleString()}
+                </p>
+                {!!project.get('domain')
+                  ? (
+                    <p>
+                      <a
+                        target="_blank"
+                        href={url.resolve(`http://${project.get('domain')}`, app.get('webRoot') || '')}>
+                        Launch app
+                      </a>
+                    </p>
+                  ) : null}
+              </div>
             ) : (
               <p>
                 You haven't deployed this app yet.
@@ -402,6 +417,8 @@ class BasicInfoEditor extends Component {
       )
     ).then(() => {
       this.onClosePublishDialog();
+    }).catch(err => {
+      // just swallow, we'll show the error
     });
   };
 };
