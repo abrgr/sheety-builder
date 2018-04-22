@@ -26,6 +26,7 @@ export default ({
         }}>
         <IconButton
           tooltip={isLinked ? 'Unlink': 'Link to spreadsheet'}
+          tooltipPosition="bottom-right"
           onClick={() => {
             if ( isLinked ) {
               onUpdate(path, null);

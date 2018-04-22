@@ -1,9 +1,10 @@
-import React, { cloneElement, Children } from 'react';
+import React, { Component, cloneElement, Children } from 'react';
 import { connect } from 'react-redux';
 import { Map, fromJS } from 'immutable';
 import AJV from 'ajv';
 import { CellRefRange } from 'sheety-model';
-import { green400, grey400 } from 'material-ui/styles/colors';
+import { green400 } from 'material-ui/styles/colors';
+import Paper from 'material-ui/Paper';
 import makeCorePresenters from 'sheety-core-presenters/dist/builder';
 import configurersAndSchemasBySchemaURI from 'sheety-core-presenters/dist/configurer';
 
@@ -49,47 +50,102 @@ function equalPaths(path, selectedPath) {
   return path.every((p, idx) => p === selectedPath[idx]);
 }
 
+class PresenterContainer_ extends Component {
+  constructor(props) {
+    super(props);
+
+    this.state = {
+      isHovered: false
+    };
+  }
+
+  componentDidMount() {
+    const {
+      path,
+      selectedPath,
+      onSelectPresenterForEditing
+    } = this.props;
+
+    if ( equalPaths(path, selectedPath) ) {
+      onSelectPresenterForEditing(path, this.el);
+    }
+  }
+
+  render() {
+    const {
+      shouldHandleClicks,
+      path,
+      selectedPath,
+      onSelectPresenterForEditing,
+      children,
+      config,
+      mapDataQuery,
+      calc,
+      arrayDataQuery,
+      formatted,
+      sheet,
+      presentersByType
+    } = this.props;
+
+    const { isHovered } = this.state;
+
+    return (
+      <div
+        ref={ref => { this.el = ref; }}>
+        <Paper
+          zDepth={isHovered ? 2 : 1}
+          style={shouldHandleClicks
+            ? {
+              border: equalPaths(path, selectedPath)
+                    ? `2px solid ${green400}`
+                    : undefined,
+              margin: 5,
+              minHeight: 10,
+              minWidth: 5
+            } : undefined}
+          onClick={(evt) => {
+            if ( shouldHandleClicks ) {
+              evt.stopPropagation();
+              onSelectPresenterForEditing(path, this.el);
+            }
+          }}
+          onMouseMove={evt => {
+            this.setState({
+              isHovered: true
+            });
+          }}
+          onMouseOut={evt => {
+            this.setState({
+              isHovered: false
+            });
+          }}>
+          {cloneElement(
+            Children.only(children),
+            {
+              config: config,
+              mapData: (mapDataQuery || new Map()).map(query => calc.evaluateFormula(query)),
+              arrayData: getArrayData(calc, arrayDataQuery, formatted),
+              arrayCells: getArrayCells(calc, arrayDataQuery),
+              arrayDataQuery: arrayDataQuery,
+              mapDataQuery: mapDataQuery,
+              sheet: sheet,
+              setCellValues: (values) => { console.log(values); },
+              path: path,
+              onSelectPresenterForEditing: onSelectPresenterForEditing,
+              renderPresenter: renderPresenter.bind(null, presentersByType, calc, selectedPath, onSelectPresenterForEditing, path)
+            }
+          )}
+        </Paper>
+      </div>
+    );
+  }
+}
+
 const PresenterContainer = connect(
   ({ editor }) => ({
     calc: editor.get('calc')
   })
-)(
-  (props) => (
-    <div
-      style={props.shouldHandleClicks
-        ? {
-          border: equalPaths(props.path, props.selectedPath)
-                ? `2px solid ${green400}`
-                : `2px dashed ${grey400}`,
-          margin: 5,
-          minHeight: 10,
-          minWidth: 5
-        } : undefined}
-      onClick={(evt) => {
-        if ( props.shouldHandleClicks ) {
-          evt.stopPropagation();
-          props.onSelectPresenterForEditing(props.path);
-        }
-      }}>
-      {cloneElement(
-        Children.only(props.children),
-        {
-          config: props.config,
-          mapData: (props.mapDataQuery || new Map()).map(query => props.calc.evaluateFormula(query)),
-          arrayData: getArrayData(props.calc, props.arrayDataQuery, props.formatted),
-          arrayCells: getArrayCells(props.calc, props.arrayDataQuery),
-          arrayDataQuery: props.arrayDataQuery,
-          mapDataQuery: props.mapDataQuery,
-          sheet: props.sheet,
-          setCellValues: (values) => { console.log(values); },
-          path: props.path,
-          onSelectPresenterForEditing: props.onSelectPresenterForEditing,
-          renderPresenter: renderPresenter.bind(null, props.presentersByType, props.calc, props.selectedPath, props.onSelectPresenterForEditing, props.path)
-        }
-      )}
-    </div>
-  )
-);
+)(PresenterContainer_);
 
 function getArrayData(calc, query, formatted) {
   if ( !query ) {
