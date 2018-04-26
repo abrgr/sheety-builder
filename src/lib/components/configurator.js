@@ -135,7 +135,11 @@ const MaybeWithLink = ({
 );
 
 const FormPart = ({ schema, path, presenter, onEditPresenter, onSetLinkPath, onClearLinkPath, onUpdate }) => {
-  const { type, $ref } = schema;
+  const { type, $ref, internallyConfigured } = schema;
+
+  if ( internallyConfigured ) {
+    return null;
+  }
 
   if ( $ref ) {
     const Configurer = configurersAndSchemasBySchemaURI.getIn([$ref, 'configurer']);
@@ -222,6 +226,7 @@ const FormPart = ({ schema, path, presenter, onEditPresenter, onSetLinkPath, onC
 
 const ObjectFormPart = ({ schema, path, presenter, onEditPresenter, onSetLinkPath, onClearLinkPath, onUpdate }) => {
   const { title, description, properties } = schema;
+
   return (
     <div>
       <h2>{title}</h2>
@@ -298,7 +303,11 @@ const ArrayFormPart = ({ schema, path, presenter, onEditPresenter, onSetLinkPath
 };
 
 const FieldFormPart = ({ schema, path, presenter, onEditPresenter, onSetLinkPath, onClearLinkPath, onUpdate }) => {
-  const { type } = schema;
+  const { type, internallyConfigured } = schema;
+  if ( internallyConfigured ) {
+    return null;
+  }
+
   switch ( type ) {
     case 'string':
       return (

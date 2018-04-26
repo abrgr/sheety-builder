@@ -3,3 +3,7 @@ body {
   padding: 0;
   font-family: sans-serif;
 }
+
+.ql-picker-options {
+  z-index: 1501 !important; /* 1 higher than the presenter configurer popup */
+}

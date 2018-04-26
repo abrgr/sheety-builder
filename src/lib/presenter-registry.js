@@ -7,6 +7,7 @@ import { green400 } from 'material-ui/styles/colors';
 import Paper from 'material-ui/Paper';
 import makeCorePresenters from 'sheety-core-presenters/dist/builder';
 import configurersAndSchemasBySchemaURI from 'sheety-core-presenters/dist/configurer';
+import { encoders, decoders } from './formula-encoders';
 
 export const schemaRegistry = new AJV({ useDefaults: true });
 
@@ -67,8 +68,15 @@ class PresenterContainer_ extends Component {
     } = this.props;
 
     if ( equalPaths(path, selectedPath) ) {
-      onSelectPresenterForEditing(path, this.el);
+      onSelectPresenterForEditing(selectedPath, this.el);
     }
+  }
+
+  componentWillReceiveProps(nextProps) {
+    if ( !equalPaths(nextProps.selectedPath, this.props.selectedPath)
+      && equalPaths(nextProps.selectedPath, nextProps.path) ) {
+        nextProps.onSelectPresenterForEditing(nextProps.selectedPath, this.el);
+      }
   }
 
   render() {
@@ -77,6 +85,7 @@ class PresenterContainer_ extends Component {
       path,
       selectedPath,
       onSelectPresenterForEditing,
+      onUpdate,
       children,
       config,
       mapDataQuery,
@@ -88,6 +97,7 @@ class PresenterContainer_ extends Component {
     } = this.props;
 
     const { isHovered } = this.state;
+    const isEditing = equalPaths(path, selectedPath);
 
     return (
       <div
@@ -96,7 +106,7 @@ class PresenterContainer_ extends Component {
           zDepth={isHovered ? 2 : 1}
           style={shouldHandleClicks
             ? {
-              border: equalPaths(path, selectedPath)
+              border: isEditing
                     ? `2px solid ${green400}`
                     : undefined,
               margin: 5,
@@ -122,17 +132,22 @@ class PresenterContainer_ extends Component {
           {cloneElement(
             Children.only(children),
             {
-              config: config,
+              isEditing,
+              encoders,
+              decoders,
+              config,
               mapData: (mapDataQuery || new Map()).map(query => calc.evaluateFormula(query)),
               arrayData: getArrayData(calc, arrayDataQuery, formatted),
               arrayCells: getArrayCells(calc, arrayDataQuery),
-              arrayDataQuery: arrayDataQuery,
-              mapDataQuery: mapDataQuery,
-              sheet: sheet,
+              arrayDataQuery,
+              mapDataQuery,
+              sheet,
               setCellValues: (values) => { console.log(values); },
-              path: path,
-              onSelectPresenterForEditing: onSelectPresenterForEditing,
-              renderPresenter: renderPresenter.bind(null, presentersByType, calc, selectedPath, onSelectPresenterForEditing, path)
+              path,
+              onSelectPresenterForEditing,
+              onUpdate,
+              selectedPath,
+              renderPresenter: renderPresenter.bind(null, presentersByType, calc, selectedPath, onSelectPresenterForEditing, onUpdate, path)
             }
           )}
         </Paper>
@@ -195,12 +210,33 @@ function getSpacer(len) {
   return spacer;
 }
 
-export function renderPresenter(presentersByType, calc, selectedPath, onSelectPresenterForEditing, basePath, nextPath, presenter) {
+const PlaceholderPresenter = makePresenter(true)({})(
+  () => (
+    <div />
+  )
+);
+
+export function renderPresenter(
+  presentersByType,
+  calc,
+  selectedPath,
+  onSelectPresenterForEditing,
+  onUpdate,
+  basePath,
+  nextPath,
+  presenter
+) {
   const Presenter = presenter && presentersByType.get(presenter.get('type'));
   const path = basePath.concat(nextPath);
 
   if ( !Presenter ) {
-    return null;
+    return (
+      <PlaceholderPresenter
+        path={path}
+        selectedPath={selectedPath}
+        onUpdate={onUpdate}
+        onSelectPresenterForEditing={onSelectPresenterForEditing} />
+    );
   }
 
   return (
@@ -213,7 +249,8 @@ export function renderPresenter(presentersByType, calc, selectedPath, onSelectPr
       mapDataQuery={presenter.get('mapData')}
       arrayDataQuery={presenter.get('arrayData')}
       onSelectPresenterForEditing={onSelectPresenterForEditing}
-      presentersByType={presentersByType}/>
+      onUpdate={onUpdate}
+      presentersByType={presentersByType} />
   );
 }
 

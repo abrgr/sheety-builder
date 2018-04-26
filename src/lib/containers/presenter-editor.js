@@ -81,6 +81,7 @@ class PresenterEditor extends Component {
           calc={calc}
           presenter={presenter}
           selectedPath={editingPresenterPath}
+          onUpdate={this.onUpdate}
           onSelectPresenterForEditing={this.onSelectPresenterForEditing} />
         <Popover
           open={!!selectedPresenterEl}
@@ -121,14 +122,7 @@ class PresenterEditor extends Component {
               presenter={presenter.getIn(editingPresenterPath)}
               linkPath={linkPath}
               calc={calc}
-              onUpdate={(path, newValue) => {
-                dispatch(
-                  editorActions.updatePresenterAtPath(
-                    editingPresenterPath.concat(path),
-                    newValue
-                  )
-                );
-              }}
+              onUpdate={this.onUpdate}
               onEditPresenter={(newPathPart) => {
                 dispatch(
                   editorActions.setEditingPresenterPath(
@@ -151,6 +145,17 @@ class PresenterEditor extends Component {
       </div>
     );
   }
+
+  onUpdate = (path, newValue) => {
+    const { dispatch, editingPresenterPath } = this.props;
+
+    dispatch(
+      editorActions.updatePresenterAtPath(
+        editingPresenterPath.concat(path),
+        newValue
+      )
+    );
+  };
 
   onSelectPresenterForEditing = (path, selectedPresenterEl) => {
     const { dispatch } = this.props;
