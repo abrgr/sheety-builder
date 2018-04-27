@@ -103,7 +103,7 @@ class PresenterContainer_ extends Component {
       <div
         ref={ref => { this.el = ref; }}>
         <Paper
-          zDepth={isHovered ? 2 : 1}
+          zDepth={isHovered ? 2 : 0}
           style={shouldHandleClicks
             ? {
               border: isEditing

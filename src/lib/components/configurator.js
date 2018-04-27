@@ -226,12 +226,18 @@ const FormPart = ({ schema, path, presenter, onEditPresenter, onSetLinkPath, onC
 
 const ObjectFormPart = ({ schema, path, presenter, onEditPresenter, onSetLinkPath, onClearLinkPath, onUpdate }) => {
   const { title, description, properties } = schema;
+  const propKeys = Object.keys(properties || {});
+
+  if ( propKeys.every(k => properties[k].internallyConfigured) ) {
+    // if every sub-property is internally-configured, we have nothing to show
+    return null;
+  }
 
   return (
     <div>
       <h2>{title}</h2>
       <h3>{description}</h3>
-      {Object.keys(properties || {}).map(prop => (
+      {propKeys.map(prop => (
         <FormPart
           key={prop}
           schema={properties[prop]}
