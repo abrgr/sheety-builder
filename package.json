@@ -13,11 +13,13 @@
     "firebaseui": "^2.6.1",
     "googleapis": "^25.0.0",
     "jiff": "^0.7.3",
+    "js-yaml": "^3.11.0",
     "material-ui": "^0.20.0",
     "quill-delta-to-html": "^0.5.7",
     "react": "^16.2.0",
     "react-data-grid": "^3.0.6",
     "react-data-grid-addons": "^3.0.6",
+    "react-diff-view": "^1.4.11",
     "react-dom": "^16.2.0",
     "react-jsoneditor": "^0.2.22",
     "react-quill": "^1.2.3",
@@ -30,6 +32,9 @@
     "sheety-calculator": "https://github.com/abrgr/sheety-calculator.git#962beb563cd9ce42e20ef0078e8f93146eecf235",
     "sheety-core-presenters": "https://github.com/abrgr/sheety-core-presenters.git#6220f5d2d65a336b1b67fa0453687c22a35f2d41",
     "sheety-model": "https://github.com/abrgr/sheety-model.git#058e6f9ddab902b93b28ba835eba55363fd5555f"
+  },
+  "resolutions": {
+    "firebaseui/firebase": "4.12.1"
   },
   "scripts": {
     "start": "react-scripts start",
