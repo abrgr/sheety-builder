@@ -88,7 +88,7 @@ class PresenterEditor extends Component {
           canAutoPosition
           useLayerForClickAway={false}
           style={{
-            zIndex: 1500 // ensures that we stay below any dialogs
+            zIndex: 1499 // ensures that we stay below any dialogs
           }}
           anchorEl={selectedPresenterEl}
           anchorOrigin={{

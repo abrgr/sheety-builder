@@ -5,5 +5,5 @@ body {
 }
 
 .ql-picker-options {
-  z-index: 1501 !important; /* 1 higher than the presenter configurer popup */
+  z-index: 1500 !important; /* 1 higher than the presenter configurer popup */
 }

@@ -23,6 +23,7 @@ import {
 import * as persistence from '../persistence';
 import firebase from '../firebase';
 import { getModel } from '../spreadsheet-utils';
+import { AppVersion } from '../models';
 
 export function setAppVersion(appVersion) {
   return dispatch => {
@@ -186,6 +187,21 @@ export function shareAppVersion(appVersion, versionToPublish) {
       dispatch({
         type: ERRORED_SHARE_APP_VERSION
       });
+
+      if ( err.code === 'failed-precondition' ) {
+        // non-linear history
+        const currentHeadVersion = new AppVersion(err.details)
+        return persistence.userAppVersions.getPresenter(
+          currentHeadVersion.get('orgId'),
+          currentHeadVersion.get('projectId'),
+          currentHeadVersion.get('author'),
+          currentHeadVersion.get('presenterHash')
+        ).then(presenter => {
+          err.presenter = presenter;
+          err.currentHeadVersion = currentHeadVersion;
+          throw err;
+        });
+      }
 
       throw err;
     });

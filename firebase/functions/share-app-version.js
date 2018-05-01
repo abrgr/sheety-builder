@@ -44,10 +44,12 @@ module.exports = function shareAppVersion(orgId, projectId, appId, appVersion, d
       }
       const currentVersion = project.apps[idx].sharedVersions[destinationBranchName];
       if ( currentVersion ) {
-        // TODO: check that appVersion extends destinationBranchName
-        const extendsCurrent = false;
-        if ( !extendsCurrent ) {
-          throw new functions.https.HttpsError('failed-precondition');
+        if ( !extendsVersion(appVersion, currentVersion) ) {
+          throw new functions.https.HttpsError(
+            'failed-precondition',
+            'Rebase required',
+            currentVersion
+          );
         }
       }
 
@@ -68,6 +70,49 @@ module.exports = function shareAppVersion(orgId, projectId, appId, appVersion, d
     sharePresentersPromise,
     txnPromise
   ]).then(([_1, _2, project]) => project);
+}
+
+function extendsVersion(appVersion, base) {
+  const {
+    presenterHash:  basePresenterHash,
+    modelInfoById: baseModelInfoById
+  } = base;
+  const baseModelIds = Object.keys(baseModelInfoById || {});
+
+  for ( let version = appVersion; version !== null; version = version.base ) {
+    const { presenterHash, modelInfoById } = version;
+
+    if ( presenterHash !== basePresenterHash ) {
+      continue;
+    }
+
+    const modelIds = new Set(Object.keys(modelInfoById || {}));
+    const hasAllModels = baseModelIds.every(id => modelIds.has(id));
+    if ( !hasAllModels ) {
+      continue;
+    }
+
+    const allModelsMatch = baseModelIds.every(id => {
+      const baseModel = baseModelInfoById[id];
+      const model = modelInfoById[id];
+
+      if ( model.monotonicVersion !== null && baseModel.monotonicVersion !== null ) {
+        return model.monotonicVersion >= baseModel.monotonicVersion;
+      }
+
+      if ( model.lastModifiedAt !== null && baseModel.lastModifiedAt !== null ) {
+        return model.lastModifiedAt >= baseModel.lastModifiedAt;
+      }
+
+      return false;
+    })
+
+    if ( allModelsMatch ) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 function indexOf(array, test) {

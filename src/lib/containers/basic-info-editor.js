@@ -101,6 +101,7 @@ class BasicInfoEditor extends Component {
               <FlatButton
                 label="Create"
                 primary={true}
+                disabled={!versionName || !selectedBaseVersion}
                 icon={isLoading
                        ? (
                          <CircularProgress
