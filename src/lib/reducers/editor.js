@@ -8,6 +8,7 @@ const initialState = new Record({
   appVersion: new AppVersion(),
   presenter: new Map(),
   editingPresenterPath: [],
+  editingActionPath: [],
   linkPath: null,
   presentersByType: new Map(),
   isLoading: false,
@@ -83,6 +84,8 @@ export default function editor(state = initialState, action) {
       return state.setIn(['presenter'].concat(action.path), action.presenter);
     case actions.SET_EDITING_PRESENTER_PATH:
       return state.set('editingPresenterPath', action.editingPresenterPath);
+    case actions.SET_EDITING_ACTION_PATH:
+      return state.set('editingActionPath', action.editingActionPath);
     case actions.SET_PRESENTERS_BY_TYPE:
       return state.set('presentersByType', action.presentersByType);
     case actions.REQUESTED_IMPORT_MODEL:

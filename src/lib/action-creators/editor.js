@@ -5,6 +5,7 @@ import {
   RECEIVED_APP_VERSION,
   ERRORED_APP_VERSION,
   SET_EDITING_PRESENTER_PATH,
+  SET_EDITING_ACTION_PATH,
   SET_PRESENTER_AT_PATH,
   APP_SAVING_INITIATED,
   APP_SAVING_COMPLETED,
@@ -84,6 +85,13 @@ export function setEditingPresenterPath(editingPresenterPath) {
   return {
     type: SET_EDITING_PRESENTER_PATH,
     editingPresenterPath
+  };
+}
+
+export function setEditingActionPath(editingActionPath) {
+  return {
+    type: SET_EDITING_ACTION_PATH,
+    editingActionPath
   };
 }
 

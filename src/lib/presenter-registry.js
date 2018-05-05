@@ -18,7 +18,7 @@ configurersAndSchemasBySchemaURI.valueSeq().forEach(schemaAndUri => {
 // TODO: figure out some way to share this code with sheety-app's presenter
 
 function makePresenter(shouldHandleClicks) {
-  return ({ formatted, schema }) => {
+  return ({ formatted, schema, getEventSchema }) => {
     return (Component) => {
       const WrappedComponent = (props) => (
         <PresenterContainer
@@ -36,6 +36,7 @@ function makePresenter(shouldHandleClicks) {
         WrappedComponent.validateSchema(p);
         return fromJS(p);
       };
+      WrappedComponent.getEventSchema = getEventSchema;
 
       return WrappedComponent;
     };
@@ -86,6 +87,7 @@ class PresenterContainer_ extends Component {
       selectedPath,
       onSelectPresenterForEditing,
       onUpdate,
+      onEditAction,
       children,
       config,
       mapDataQuery,
@@ -146,8 +148,9 @@ class PresenterContainer_ extends Component {
               path,
               onSelectPresenterForEditing,
               onUpdate,
+              onEditAction,
               selectedPath,
-              renderPresenter: renderPresenter.bind(null, presentersByType, calc, selectedPath, onSelectPresenterForEditing, onUpdate, path)
+              renderPresenter: renderPresenter.bind(null, presentersByType, calc, selectedPath, onSelectPresenterForEditing, onUpdate, onEditAction, path)
             }
           )}
         </Paper>
@@ -222,6 +225,7 @@ export function renderPresenter(
   selectedPath,
   onSelectPresenterForEditing,
   onUpdate,
+  onEditAction,
   basePath,
   nextPath,
   presenter
@@ -250,6 +254,7 @@ export function renderPresenter(
       arrayDataQuery={presenter.get('arrayData')}
       onSelectPresenterForEditing={onSelectPresenterForEditing}
       onUpdate={onUpdate}
+      onEditAction={onEditAction}
       presentersByType={presentersByType} />
   );
 }

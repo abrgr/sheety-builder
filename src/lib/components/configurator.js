@@ -1,5 +1,5 @@
 import React from 'react';
-import { fromJS, Map, List } from 'immutable';
+import { Map, List } from 'immutable';
 import { Card, CardHeader, CardText } from 'material-ui/Card';
 import TextField from 'material-ui/TextField';
 import Toggle from 'material-ui/Toggle';
@@ -14,12 +14,14 @@ import StaticOrLinkedValue from './static-or-linked-value';
 import configurersAndSchemasBySchemaURI from 'sheety-core-presenters/dist/configurer';
 import { schemaRegistry } from '../presenter-registry';
 import { encoders, decoders } from '../formula-encoders';
+import { getSchemaAtPath } from '../schema-utils';
 
 export default ({
   presenterComponent,
   presenter,
   onUpdate,
   onEditPresenter,
+  onEditAction,
   onSetLinkPath,
   onClearLinkPath,
   linkPath,
@@ -41,7 +43,7 @@ export default ({
           <SheetLinker
             calc={calc}
             value={usablePresenter.getIn(linkPath)}
-            schema={getSchemaAtPath(presenterComponent.schema, linkPath)}
+            schema={getSchemaAtPath(schemaRegistry, presenterComponent.schema, linkPath)}
             onUpdate={(val) => {
               onUpdate(linkPath, val);
             }}
@@ -58,6 +60,7 @@ export default ({
               schema={properties[prop]}
               path={[prop]}
               onEditPresenter={onEditPresenter}
+              onEditAction={onEditAction}
               onUpdate={onUpdate}
               onSetLinkPath={onSetLinkPath}
               onClearLinkPath={onClearLinkPath}
@@ -67,37 +70,6 @@ export default ({
       </Card>
     </div>
   );
-};
-
-const getSchemaAtPath = (schema, path) => {
-  if ( !schema ) {
-    return null;
-  }
-
-  const effectiveSchema = schema.get('$ref')
-                        ? fromJS(schemaRegistry.getSchema(schema.get('$ref')).schema)
-                        : schema;
-
-  if ( !path.length ) {
-    return effectiveSchema;
-  }
-
-  const firstPart = path[0];
-
-  const propertyMatch = effectiveSchema.getIn(['properties', firstPart]);
-  if ( propertyMatch ) {
-    return getSchemaAtPath(propertyMatch, path.slice(1));
-  }
-
-  const arrayMatch = effectiveSchema.get('type') === 'array'
-                   ? effectiveSchema.get('items')
-                   : null;
-  if ( arrayMatch ) {
-    return getSchemaAtPath(arrayMatch, path.slice(1));
-  }
-
-  // TODO: more?
-  return null;
 };
 
 const MaybeWithLink = ({
@@ -134,7 +106,7 @@ const MaybeWithLink = ({
     )
 );
 
-const FormPart = ({ schema, path, presenter, onEditPresenter, onSetLinkPath, onClearLinkPath, onUpdate }) => {
+const FormPart = ({ schema, path, presenter, onEditPresenter, onEditAction, onSetLinkPath, onClearLinkPath, onUpdate }) => {
   const { type, $ref, internallyConfigured } = schema;
 
   if ( internallyConfigured ) {
@@ -167,6 +139,7 @@ const FormPart = ({ schema, path, presenter, onEditPresenter, onSetLinkPath, onC
             description={description}
             presenter={presenter}
             onEditPresenter={onEditPresenter}
+            onEditAction={onEditAction}
             onUpdate={(value) => {
               onUpdate(path, value);
             }}
@@ -195,6 +168,7 @@ const FormPart = ({ schema, path, presenter, onEditPresenter, onSetLinkPath, onC
           path={path}
           presenter={presenter}
           onEditPresenter={onEditPresenter}
+          onEditAction={onEditAction}
           onUpdate={onUpdate}
           onSetLinkPath={onSetLinkPath}
           onClearLinkPath={onClearLinkPath} />
@@ -206,6 +180,7 @@ const FormPart = ({ schema, path, presenter, onEditPresenter, onSetLinkPath, onC
           path={path}
           presenter={presenter}
           onEditPresenter={onEditPresenter}
+          onEditAction={onEditAction}
           onUpdate={onUpdate}
           onSetLinkPath={onSetLinkPath}
           onClearLinkPath={onClearLinkPath} />
@@ -217,6 +192,7 @@ const FormPart = ({ schema, path, presenter, onEditPresenter, onSetLinkPath, onC
           path={path}
           presenter={presenter}
           onEditPresenter={onEditPresenter}
+          onEditAction={onEditAction}
           onUpdate={onUpdate}
           onSetLinkPath={onSetLinkPath}
           onClearLinkPath={onClearLinkPath} />
@@ -224,7 +200,7 @@ const FormPart = ({ schema, path, presenter, onEditPresenter, onSetLinkPath, onC
   }
 };
 
-const ObjectFormPart = ({ schema, path, presenter, onEditPresenter, onSetLinkPath, onClearLinkPath, onUpdate }) => {
+export const ObjectFormPart = ({ schema, path, presenter, onEditPresenter, onEditAction, onSetLinkPath, onClearLinkPath, onUpdate }) => {
   const { title, description, properties } = schema;
   const propKeys = Object.keys(properties || {});
 
@@ -244,6 +220,7 @@ const ObjectFormPart = ({ schema, path, presenter, onEditPresenter, onSetLinkPat
           path={path.concat([prop])}
           presenter={presenter}
           onEditPresenter={onEditPresenter}
+          onEditAction={onEditAction}
           onUpdate={onUpdate}
           onSetLinkPath={onSetLinkPath}
           onClearLinkPath={onClearLinkPath} />
@@ -252,7 +229,7 @@ const ObjectFormPart = ({ schema, path, presenter, onEditPresenter, onSetLinkPat
   );
 };
 
-const ArrayFormPart = ({ schema, path, presenter, onEditPresenter, onSetLinkPath, onClearLinkPath, onUpdate }) => {
+const ArrayFormPart = ({ schema, path, presenter, onEditPresenter, onEditAction, onSetLinkPath, onClearLinkPath, onUpdate }) => {
   const { title, description, items } = schema;
   const isTuple = Array.isArray(items);
 
@@ -263,6 +240,7 @@ const ArrayFormPart = ({ schema, path, presenter, onEditPresenter, onSetLinkPath
         path={path}
         presenter={presenter}
         onEditPresenter={onEditPresenter}
+        onEditAction={onEditAction}
         onSetLinkPath={onSetLinkPath}
         onClearLinkPath={onClearLinkPath}
         onUpdate={onUpdate} />
@@ -285,6 +263,7 @@ const ArrayFormPart = ({ schema, path, presenter, onEditPresenter, onSetLinkPath
                   schema={items}
                   path={path.concat([idx])}
                   onEditPresenter={onEditPresenter}
+                  onEditAction={onEditAction}
                   onUpdate={onUpdate}
                   onSetLinkPath={onSetLinkPath}
                   onClearLinkPath={onClearLinkPath}
@@ -308,7 +287,7 @@ const ArrayFormPart = ({ schema, path, presenter, onEditPresenter, onSetLinkPath
   );
 };
 
-const FieldFormPart = ({ schema, path, presenter, onEditPresenter, onSetLinkPath, onClearLinkPath, onUpdate }) => {
+const FieldFormPart = ({ schema, path, presenter, onEditPresenter, onEditAction, onSetLinkPath, onClearLinkPath, onUpdate }) => {
   const { type, internallyConfigured } = schema;
   if ( internallyConfigured ) {
     return null;
@@ -322,6 +301,7 @@ const FieldFormPart = ({ schema, path, presenter, onEditPresenter, onSetLinkPath
           path={path}
           presenter={presenter}
           onEditPresenter={onEditPresenter}
+          onEditAction={onEditAction}
           onUpdate={onUpdate}
           onSetLinkPath={onSetLinkPath}
           onClearLinkPath={onClearLinkPath} />
@@ -333,6 +313,7 @@ const FieldFormPart = ({ schema, path, presenter, onEditPresenter, onSetLinkPath
           path={path}
           presenter={presenter}
           onEditPresenter={onEditPresenter}
+          onEditAction={onEditAction}
           onUpdate={onUpdate}
           onSetLinkPath={onSetLinkPath}
           onClearLinkPath={onClearLinkPath} />
@@ -344,6 +325,7 @@ const FieldFormPart = ({ schema, path, presenter, onEditPresenter, onSetLinkPath
           path={path}
           presenter={presenter}
           onEditPresenter={onEditPresenter}
+          onEditAction={onEditAction}
           onUpdate={onUpdate}
           onSetLinkPath={onSetLinkPath}
           onClearLinkPath={onClearLinkPath} />

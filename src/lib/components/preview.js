@@ -17,11 +17,12 @@ export default ({
   calc,
   selectedPath,
   onUpdate,
+  onEditAction,
   onSelectPresenterForEditing
 }) => {
   const Presenter = presenter && presentersByType.get(presenter.get('type'));
   return !!Presenter
-    ? renderPresenter(presentersByType, calc, selectedPath, onSelectPresenterForEditing, onUpdate, [], [], presenter)
+    ? renderPresenter(presentersByType, calc, selectedPath, onSelectPresenterForEditing, onUpdate, onEditAction, [], [], presenter)
     : (
       <Placeholder />
     )

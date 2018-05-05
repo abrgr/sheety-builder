@@ -9,6 +9,7 @@ import Preview from '../components/preview';
 import Breadcrumbs from '../components/breadcrumbs';
 import Loader from '../components/loader';
 import ErrorMsg from '../components/error-msg';
+import ActionEditorDialog from '../components/action-editor-dialog';
 import loadPresenters from '../presenter-registry';
 
 class PresenterEditor extends Component {
@@ -31,6 +32,7 @@ class PresenterEditor extends Component {
       calc,
       presentersByType,
       editingPresenterPath,
+      editingActionPath,
       linkPath,
       dispatch
     } = this.props;
@@ -63,6 +65,21 @@ class PresenterEditor extends Component {
         style={{
           height: '100%'
         }}>
+        {presenterComponent
+          ? (
+            <ActionEditorDialog
+              open={!!editingActionPath && !!editingActionPath.length && !!presenterComponent.getEventSchema}
+              eventSchema={presenterComponent.getEventSchema && presenterComponent.getEventSchema(
+                // TODO: invariant: editingPresenterPath.concat(x) === editingActionPath
+                editingActionPath.slice(editingPresenterPath.length),
+                presenter.getIn(editingPresenterPath)
+              )}
+              calc={calc}
+              onUpdate={this.onUpdate.bind(null, editingPresenterPath.concat(editingActionPath))}
+              onRequestClose={() => {
+                this.props.dispatch(editorActions.setEditingActionPath([]));
+              }} />
+          ) : null}
         <Breadcrumbs
           items={new List(editingPresenterPath)}
           maxItems={3}
@@ -82,6 +99,7 @@ class PresenterEditor extends Component {
           presenter={presenter}
           selectedPath={editingPresenterPath}
           onUpdate={this.onUpdate}
+          onEditAction={this.onEditAction}
           onSelectPresenterForEditing={this.onSelectPresenterForEditing} />
         <Popover
           open={!!selectedPresenterEl}
@@ -157,6 +175,10 @@ class PresenterEditor extends Component {
     );
   };
 
+  onEditAction = path => {
+    this.props.dispatch(editorActions.setEditingActionPath(path));
+  };
+
   onSelectPresenterForEditing = (path, selectedPresenterEl) => {
     const { dispatch } = this.props;
     dispatch(editorActions.setEditingPresenterPath(path));
@@ -175,6 +197,7 @@ export default connect(
     presentersByType: editor.get('presentersByType'),
     presenter: editor.get('presenter'),
     editingPresenterPath: editor.get('editingPresenterPath'),
+    editingActionPath: editor.get('editingActionPath'),
     linkPath: editor.get('linkPath')
   })
 )(PresenterEditor);
